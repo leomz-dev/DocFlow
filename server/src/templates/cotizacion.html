@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Cotización {{docNumber}}</title>
+  {{{baseCssTag}}}
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="doc-header">
+    <!-- Row 1: Company name centered -->
+    <div class="company-banner">
+      <div class="company-banner-name">{{company.name}}</div>
+      {{#if company.tagline}}<div class="company-banner-tagline">{{company.tagline}}</div>{{/if}}
+    </div>
+    <!-- Row 2: Logo left · Doc meta right -->
+    <div class="header-row">
+      <div class="header-left">
+        {{#if company.logoPath}}
+          <img class="logo" src="{{company.logoPath}}" alt="Logo">
+        {{else}}
+          <div class="no-logo">{{company.name}}</div>
+        {{/if}}
+      </div>
+      <div class="doc-meta">
+        <div class="doc-type">Cotización</div>
+        <div class="doc-number">{{docNumber}}</div>
+        <div class="doc-date">Fecha: {{formatDate date}}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INFO GRID -->
+  <div class="info-grid">
+    <div class="info-block">
+      <h3>Oferente</h3>
+      <p class="company-name">{{company.name}}</p>
+      <p>NIT: {{company.nit}}</p>
+      <p>{{company.address}}</p>
+      <p>{{company.city}}, {{company.department}}</p>
+      <p>Tel: {{company.phone}}</p>
+      <p>{{company.email}}</p>
+    </div>
+    <div class="info-block">
+      <h3>Cliente</h3>
+      <p class="company-name">{{client.name}}</p>
+      {{#if client.nit}}<p>NIT/CC: {{client.nit}}</p>{{/if}}
+      {{#if client.address}}<p>{{client.address}}</p>{{/if}}
+      {{#if client.city}}<p>{{client.city}}</p>{{/if}}
+      {{#if client.phone}}<p>Tel: {{client.phone}}</p>{{/if}}
+      {{#if client.email}}<p>{{client.email}}</p>{{/if}}
+    </div>
+  </div>
+
+  <!-- ITEMS -->
+  <table class="items">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Descripción</th>
+        <th class="right">Cant.</th>
+        <th class="right">V. Unitario</th>
+        <th class="right">Subtotal</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each items}}
+      <tr>
+        <td>{{idx}}</td>
+        <td>{{description}}</td>
+        <td class="right">{{quantity}}</td>
+        <td class="right">{{formatCOP unitPrice}}</td>
+        <td class="right">{{formatCOP subtotal}}</td>
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
+
+  <!-- TOTALS -->
+  <div class="totals">
+    <div class="totals-table">
+      <div class="row">
+        <span>Subtotal</span>
+        <span>{{formatCOP subtotal}}</span>
+      </div>
+      {{#if (gt ivaAmount 0)}}
+      <div class="row">
+        <span>IVA ({{ivaRate}}%)</span>
+        <span>{{formatCOP ivaAmount}}</span>
+      </div>
+      {{/if}}
+      {{#if (gt retAmount 0)}}
+      <div class="row">
+        <span>Ret. en la fuente ({{retRate}}%)</span>
+        <span>- {{formatCOP retAmount}}</span>
+      </div>
+      {{/if}}
+      <div class="row total">
+        <span>TOTAL</span>
+        <span>{{formatCOP total}}</span>
+      </div>
+    </div>
+  </div>
+
+  {{#if notes}}
+  <div class="notes">
+    <h3>Observaciones / Condiciones</h3>
+    <p>{{notes}}</p>
+  </div>
+  {{/if}}
+
+  <!-- SIGNATURE -->
+  <div class="signature-block">
+    <div class="sig-item">
+      {{#if company.signPath}}
+        <img src="{{company.signPath}}" alt="Firma">
+      {{/if}}
+      <div class="sig-line"></div>
+      <strong>{{company.legalRep}}</strong>
+      <p>{{company.name}}</p>
+    </div>
+    <div class="sig-item">
+      <div class="sig-line" style="margin-top:54px"></div>
+      <strong>Aceptado por: {{client.name}}</strong>
+    </div>
+  </div>
+
+  <div class="doc-footer">
+    Cotización válida por 30 días a partir del {{formatDateLong date}} — {{company.name}} — NIT {{company.nit}}
+  </div>
+
+</div>
+</body>
+</html>

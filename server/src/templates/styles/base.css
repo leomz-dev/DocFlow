@@ -1,0 +1,270 @@
+/* DocFlow — Base styles for PDF templates */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 11pt;
+  color: #1a1a1a;
+  background: #fff;
+  line-height: 1.5;
+}
+
+/* ── Page ── */
+.page {
+  width: 216mm;
+  min-height: 279mm;
+  padding: 14mm 16mm;
+  margin: 0 auto;
+  background: #fff;
+}
+
+/* ── Header ── */
+.doc-header {
+  border-bottom: 3px solid #1a1a2e;
+  padding-bottom: 10px;
+  margin-bottom: 14px;
+}
+
+/* Row 1 — Company name centered */
+.doc-header .company-banner {
+  text-align: center;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #e0e0ec;
+}
+
+.doc-header .company-banner-name {
+  font-size: 17pt;
+  font-weight: 800;
+  color: #1a1a2e;
+  letter-spacing: -0.5px;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.doc-header .company-banner-tagline {
+  font-size: 8.5pt;
+  color: #666;
+  margin-top: 1px;
+  letter-spacing: 0.3px;
+}
+
+/* Row 2 — Logo left · doc-meta right */
+.doc-header .header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.doc-header .header-left {
+  display: flex;
+  align-items: center;
+}
+
+.doc-header .logo {
+  max-height: 80px;
+  max-width: 200px;
+  object-fit: contain;
+}
+
+/* Fallback when there is no logo */
+.doc-header .no-logo {
+  font-size: 13pt;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.doc-meta {
+  text-align: right;
+}
+
+.doc-meta .doc-type {
+  font-size: 14pt;
+  font-weight: 700;
+  color: #1a1a2e;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.doc-meta .doc-number {
+  font-size: 12pt;
+  font-weight: 600;
+  color: #4f46e5;
+}
+
+.doc-meta .doc-date {
+  font-size: 9pt;
+  color: #555;
+}
+
+/* ── Info blocks ── */
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.info-block {
+  background: #f8f8fc;
+  border-radius: 5px;
+  padding: 10px 12px;
+  border-left: 3px solid #4f46e5;
+}
+
+.info-block h3 {
+  font-size: 8pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  color: #4f46e5;
+  margin-bottom: 5px;
+}
+
+.info-block p {
+  font-size: 9.5pt;
+  color: #1a1a1a;
+  line-height: 1.6;
+}
+
+.info-block .company-name {
+  font-size: 11pt;
+  font-weight: 700;
+}
+
+/* ── Items table ── */
+table.items {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 12px;
+  font-size: 9.5pt;
+}
+
+table.items thead tr {
+  background: #1a1a2e;
+  color: #fff;
+}
+
+table.items thead th {
+  padding: 8px 10px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 8.5pt;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+
+table.items thead th.right { text-align: right; }
+
+table.items tbody tr:nth-child(even) { background: #f4f4fb; }
+
+table.items tbody td {
+  padding: 7px 10px;
+  border-bottom: 1px solid #e8e8f0;
+}
+
+table.items tbody td.right { text-align: right; }
+
+/* ── Totals ── */
+.totals {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 14px;
+}
+
+.totals-table {
+  width: 220px;
+}
+
+.totals-table .row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 9.5pt;
+  border-bottom: 1px solid #e8e8f0;
+}
+
+.totals-table .row.total {
+  font-size: 11pt;
+  font-weight: 700;
+  color: #1a1a2e;
+  border-top: 2px solid #1a1a2e;
+  border-bottom: none;
+  padding-top: 6px;
+  margin-top: 2px;
+}
+
+/* ── Notes ── */
+.notes {
+  border: 1px solid #e0e0ec;
+  border-radius: 5px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  font-size: 9pt;
+  color: #444;
+}
+
+.notes h3 {
+  font-size: 8pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  color: #4f46e5;
+  margin-bottom: 5px;
+}
+
+/* ── Bank info ── */
+.bank-info {
+  background: #f0f0fb;
+  border-radius: 5px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  font-size: 9pt;
+}
+
+.bank-info h3 {
+  font-size: 8pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  color: #4f46e5;
+  margin-bottom: 6px;
+}
+
+.bank-info p { line-height: 1.8; }
+
+/* ── Signature ── */
+.signature-block {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 24px;
+  padding-top: 10px;
+}
+
+.sig-item {
+  text-align: center;
+  width: 45%;
+}
+
+.sig-item .sig-line {
+  border-top: 1px solid #1a1a2e;
+  margin-bottom: 6px;
+}
+
+.sig-item img {
+  max-height: 50px;
+  margin-bottom: 4px;
+}
+
+.sig-item p { font-size: 9pt; color: #333; }
+.sig-item strong { display: block; font-size: 9.5pt; }
+
+/* ── Footer ── */
+.doc-footer {
+  margin-top: auto;
+  border-top: 1px solid #e0e0ec;
+  padding-top: 8px;
+  text-align: center;
+  font-size: 8pt;
+  color: #888;
+}

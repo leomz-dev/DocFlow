@@ -1,0 +1,70 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800&display=swap');
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+@layer base {
+  :root {
+    --background: 210 33% 98%;
+    --foreground: 204 9% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 204 9% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 204 9% 11%;
+
+    --primary: 223 100% 28%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 229 24% 43%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 204 10% 89%;
+    --muted-foreground: 232 10% 30%;
+
+    --accent: 210 14% 93%;
+    --accent-foreground: 204 9% 11%;
+
+    --destructive: 0 75% 42%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 236 18% 80%;
+    --input: 210 20% 96%;
+    --ring: 223 100% 28%;
+
+    --radius: 0.75rem;
+
+    /* Sidebar specific */
+    --sidebar-bg: 210 33% 98%;
+    --sidebar-border: 236 18% 80%;
+    --navbar-bg: 0 0% 100%;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fade-in 0.2s ease-out both;
+  }
+  .animate-slide-up {
+    animation: slide-up 0.25s ease-out both;
+  }
+}
