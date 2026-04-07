@@ -1,19 +1,9 @@
 import { useState } from 'react'
 import { useNavigate, Navigate } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { FileText, Eye, EyeOff, AlertCircle, Loader2, ArrowRight, CheckCircle2 } from 'lucide-react'
+import { GoogleLogin } from '@react-oauth/google'
+import { FileText, AlertCircle, Loader2, CheckCircle2 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
-
-const schema = z.object({
-  email: z.string().email('Email inválido'),
-  password: z.string().min(1, 'Contraseña requerida'),
-})
 
 const FEATURES = [
   'Genera PDFs profesionales en segundos',
@@ -22,25 +12,28 @@ const FEATURES = [
 ]
 
 export default function LoginPage() {
-  const { login, isAuthenticated } = useAuth()
+  const { loginWithGoogle, isAuthenticated } = useAuth()
   const navigate = useNavigate()
   const [serverError, setServerError] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
-    resolver: zodResolver(schema),
-  })
+  const [isProcessing, setIsProcessing] = useState(false)
 
   if (isAuthenticated) return <Navigate to="/dashboard" replace />
 
-  const onSubmit = async (data) => {
+  const handleGoogleSuccess = async (credentialResponse) => {
     setServerError('')
+    setIsProcessing(true)
     try {
-      await login(data.email, data.password)
+      await loginWithGoogle(credentialResponse.credential)
       navigate('/dashboard')
     } catch (err) {
-      setServerError(err.response?.data?.error || 'Error de conexión. Intenta de nuevo.')
+      setServerError(err.response?.data?.error || 'Error al iniciar sesión con Google.')
+    } finally {
+      setIsProcessing(false)
     }
+  }
+
+  const handleGoogleError = () => {
+    setServerError('Error en la autenticación de Google. Inténtalo de nuevo.')
   }
 
   return (
@@ -83,7 +76,7 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* ── Right: Form ── */}
+      {/* ── Right: Login ── */}
       <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
         <div className="w-full max-w-sm">
           {/* Mobile logo */}
@@ -94,83 +87,45 @@ export default function LoginPage() {
             <span className="font-black text-base tracking-widest uppercase text-foreground">Docflow</span>
           </div>
 
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-foreground mb-1">Bienvenido de nuevo</h2>
-            <p className="text-muted-foreground text-sm">Inicia sesión para continuar</p>
+          <div className="mb-10 text-center lg:text-left">
+            <h2 className="text-3xl font-bold text-foreground mb-2">Bienvenido</h2>
+            <p className="text-muted-foreground text-sm">Gestiona tus documentos de forma segura con Google</p>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            {/* Email */}
-            <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-sm font-medium">Correo electrónico</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="admin@docflow.co"
-                autoComplete="email"
-                className={cn("h-10", errors.email && "border-destructive focus-visible:ring-destructive")}
-                {...register('email')}
-              />
-              {errors.email && (
-                <p className="flex items-center gap-1.5 text-xs text-destructive">
-                  <AlertCircle size={12} /> {errors.email.message}
-                </p>
-              )}
-            </div>
-
-            {/* Password */}
-            <div className="space-y-1.5">
-              <Label htmlFor="password" className="text-sm font-medium">Contraseña</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  autoComplete="current-password"
-                  className={cn("h-10 pr-10", errors.password && "border-destructive focus-visible:ring-destructive")}
-                  {...register('password')}
+          <div className="flex flex-col items-center gap-6">
+            {/* Google Login Button Container */}
+            <div className="w-full flex justify-center py-4">
+              {isProcessing ? (
+                <div className="flex flex-col items-center gap-4 text-muted-foreground">
+                  <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                  <p className="text-sm">Verificando cuenta...</p>
+                </div>
+              ) : (
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={handleGoogleError}
+                  theme="filled_blue"
+                  shape="pill"
+                  width="100%"
+                  size="large"
+                  text="signin_with"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(v => !v)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground transition-colors"
-                  tabIndex={-1}
-                >
-                  {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-                </button>
-              </div>
-              {errors.password && (
-                <p className="flex items-center gap-1.5 text-xs text-destructive">
-                  <AlertCircle size={12} /> {errors.password.message}
-                </p>
               )}
             </div>
 
             {/* Server error */}
             {serverError && (
-              <div className="flex items-center gap-2 rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-2.5 text-sm text-destructive">
+              <div className="w-full flex items-center gap-2 rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-2.5 text-sm text-destructive mt-2">
                 <AlertCircle size={15} className="shrink-0" />
                 {serverError}
               </div>
             )}
+          </div>
 
-            {/* Submit */}
-            <Button type="submit" className="w-full h-10 gap-2" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <><Loader2 size={15} className="animate-spin" /> Ingresando...</>
-              ) : (
-                <>Acceder a mi cuenta <ArrowRight size={15} /></>
-              )}
-            </Button>
-          </form>
-
-          {/* Demo hint */}
-          <div className="mt-8 pt-6 border-t border-border">
-            <p className="text-xs text-muted-foreground text-center">
-              Acceso demo:{' '}
-              <code className="bg-muted px-1 py-0.5 rounded text-foreground font-mono">admin@docflow.co</code>
-              {' / '}
-              <code className="bg-muted px-1 py-0.5 rounded text-foreground font-mono">admin123</code>
+          {/* Login Note */}
+          <div className="mt-12 pt-6 border-t border-border">
+            <p className="text-xs text-muted-foreground text-center leading-relaxed">
+              Al iniciar sesión, aceptas nuestra política de privacidad y el uso de tu cuenta de Google solo para fines de autenticación en la plataforma.
             </p>
           </div>
         </div>

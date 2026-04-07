@@ -9,6 +9,7 @@ const usersRoutes     = require('./src/routes/users.routes');
 const documentsRoutes = require('./src/routes/documents.routes');
 const clientsRoutes   = require('./src/routes/clients.routes');
 const errorMiddleware = require('./src/middlewares/error.middleware');
+const prisma = require('./src/config/prisma');
 
 const app = express();
 
@@ -31,7 +32,19 @@ app.get('/api/health', (_req, res) => res.json({ status: 'ok', ts: new Date() })
 // ── Manejador global de errores (debe ser el último middleware) ──────
 app.use(errorMiddleware);
 
-app.listen(PORT, () => {
-  console.log(`🚀 DocFlow server running on http://localhost:${PORT}`);
-});
+async function startServer() {
+  try {
+    await prisma.$connect();
+    console.log('🍃 PostgreSQL Connected via Prisma');
+    
+    app.listen(PORT, () => {
+      console.log(`🚀 DocFlow server running on http://localhost:${PORT}`);
+    });
+  } catch (err) {
+    console.error('❌ Failed to connect to database:', err.message);
+    process.exit(1);
+  }
+}
+
+startServer();
 

@@ -1,72 +1,66 @@
-const fs = require('fs');
-const { DATA_PATH } = require('../../config/constants');
-
-function readDB() {
-  return JSON.parse(fs.readFileSync(DATA_PATH, 'utf-8'));
-}
-
-function writeDB(data) {
-  fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2), 'utf-8');
-}
+const prisma = require('../config/prisma');
 
 /**
  * Lista el historial de documentos de un usuario.
  * @param {string} userId
- * @returns {Array}
+ * @returns {Promise<Array>}
  */
-function listByUser(userId) {
-  const db = readDB();
-  const user = db.users.find((u) => u.id === userId);
-  if (!user) return [];
-  return (user.documents || []).sort(
-    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-  );
+async function listByUser(userId) {
+  return await prisma.document.findMany({
+    where: { userId },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
 }
 
 /**
  * Agrega un documento al historial del usuario.
  * @param {string} userId
- * @param {{ id, type, number, title, filePath, createdAt }} docEntry
+ * @param {{ id, type, number, title, filePath, clientName, total, createdAt }} docEntry
  */
-function addDocument(userId, docEntry) {
-  const db = readDB();
-  const user = db.users.find((u) => u.id === userId);
-  if (!user) throw new Error(`User not found: ${userId}`);
-  if (!user.documents) user.documents = [];
-  user.documents.push(docEntry);
-  writeDB(db);
-  return docEntry;
+async function addDocument(userId, docEntry) {
+  return await prisma.document.create({
+    data: {
+      ...docEntry,
+      userId,
+    },
+  });
 }
 
 /**
  * Busca un documento específico del usuario.
  * @param {string} userId
  * @param {string} docId
- * @returns {{ doc, filePath } | null}
+ * @returns {Promise<Object|null>}
  */
-function findDocument(userId, docId) {
-  const db = readDB();
-  const user = db.users.find((u) => u.id === userId);
-  if (!user) return null;
-  const doc = (user.documents || []).find((d) => d.id === docId);
-  return doc || null;
+async function findDocument(userId, docId) {
+  return await prisma.document.findFirst({
+    where: {
+      id: docId,
+      userId,
+    },
+  });
 }
 
 /**
  * Elimina un documento del historial del usuario.
  * @param {string} userId
  * @param {string} docId
- * @returns {boolean}
+ * @returns {Promise<boolean>}
  */
-function deleteDocument(userId, docId) {
-  const db = readDB();
-  const user = db.users.find((u) => u.id === userId);
-  if (!user || !user.documents) return false;
-  const before = user.documents.length;
-  user.documents = user.documents.filter((d) => d.id !== docId);
-  if (user.documents.length === before) return false;
-  writeDB(db);
-  return true;
+async function deleteDocument(userId, docId) {
+  try {
+    await prisma.document.delete({
+      where: {
+        id: docId,
+        userId,
+      },
+    });
+    return true;
+  } catch (err) {
+    return false;
+  }
 }
 
 module.exports = { listByUser, addDocument, findDocument, deleteDocument };

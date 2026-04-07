@@ -1,10 +1,11 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import * as usersApi from '@/api/users.api'
 import {
-  Settings, User, Lock, Building2, Upload,
+  Settings, User, Building2, Upload,
   CheckCircle, AlertCircle, Phone, Mail,
-  MapPin, Hash, Image, PenLine, FileText
+  MapPin, Image, PenLine, FileText, ExternalLink,
+  Check
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -36,7 +37,8 @@ function SettingsInput({ label, id, error, ...props }) {
         id={id}
         className={cn(
           "w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 transition-all text-sm font-medium outline-none text-on-surface placeholder:text-on-surface-variant/50",
-          error && "ring-2 ring-error/50 bg-error-container/10"
+          error && "ring-2 ring-error/50 bg-error-container/10",
+          props.disabled && "opacity-50 cursor-not-allowed"
         )}
         {...props}
       />
@@ -45,35 +47,70 @@ function SettingsInput({ label, id, error, ...props }) {
 }
 
 /* ─── Upload Card ─────────────────────────────────── */
-function UploadCard({ label, icon: Icon, hint, onUpload, preview, loading }) {
+function UploadCard({ label, icon: Icon, hint, onUpload, isAttached, loading }) {
   const inputRef = useRef(null)
+  
   return (
     <div className="space-y-2">
       <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest font-sans">{label}</label>
       <div
         onClick={() => inputRef.current?.click()}
         className={cn(
-          'relative flex flex-col items-center justify-center gap-2 h-40 rounded-[1rem] border-2 border-dashed transition-colors cursor-pointer',
-          'border-outline-variant/30 hover:border-primary/50 hover:bg-surface-container-low',
+          'relative flex flex-col items-center justify-center gap-2 h-40 rounded-[1.5rem] border-2 border-dashed transition-all cursor-pointer overflow-hidden group',
+          isAttached 
+            ? 'border-tertiary/30 bg-tertiary/5' 
+            : 'border-outline-variant/30 hover:border-primary/50 hover:bg-surface-container-low',
           loading && 'opacity-60 pointer-events-none'
         )}
       >
-        {preview ? (
-          <img
-            src={preview}
-            alt={label}
-            className="h-full w-full object-contain rounded-lg p-2"
-          />
-        ) : (
-          <>
-            <Icon size={32} className="text-on-surface-variant/50" />
-            <p className="text-xs text-on-surface-variant font-medium text-center px-4 font-sans">{hint}</p>
-          </>
+        {/* Background Pattern for Attached State */}
+        {isAttached && (
+          <div className="absolute inset-0 z-0 opacity-10">
+             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-tertiary via-transparent to-transparent" />
+          </div>
         )}
-        <div className="absolute bottom-3 right-3 flex items-center gap-1 bg-primary-container text-on-primary-container text-[10px] font-bold px-3 py-1 rounded-full shadow-sm">
-          <Upload size={12} />
-          {loading ? 'Subiendo...' : 'Camabiar'}
+
+        <div className="relative z-10 flex flex-col items-center gap-3">
+          {isAttached ? (
+            <>
+              <div className="h-16 w-16 rounded-full bg-tertiary/10 flex items-center justify-center text-tertiary shadow-sm border border-tertiary/20 animate-in zoom-in-75 duration-300">
+                <CheckCircle size={32} />
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-bold text-on-surface font-sans uppercase tracking-tight">Archivo Vinculado</p>
+                <p className="text-[10px] text-tertiary/80 font-bold uppercase tracking-widest mt-0.5">Listo para usar</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="h-12 w-12 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant/50 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                <Icon size={24} />
+              </div>
+              <p className="text-xs text-on-surface-variant font-medium text-center px-4 font-sans max-w-[200px]">{hint}</p>
+            </>
+          )}
         </div>
+
+        {/* Floating Label */}
+        <div className={cn(
+          "absolute bottom-3 right-3 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all shadow-sm z-20",
+          isAttached 
+            ? "bg-tertiary-container text-on-tertiary-container group-hover:bg-tertiary group-hover:text-on-tertiary" 
+            : "bg-primary-container text-on-primary-container group-hover:bg-primary group-hover:text-on-primary"
+        )}>
+          {loading ? (
+             <span className="flex items-center gap-2">
+               <div className="h-2 w-2 rounded-full bg-current animate-pulse" />
+               Subiendo...
+             </span>
+          ) : (
+            <>
+              <Upload size={12} />
+              {isAttached ? 'Sustituir' : 'Subir Archivo'}
+            </>
+          )}
+        </div>
+
         <input
           ref={inputRef}
           type="file"
@@ -111,17 +148,9 @@ export default function SettingsPage() {
   const BASE_URL = 'http://localhost:3001'
 
   /* ── Account info ── */
-  const [name, setName]   = useState(user?.name ?? '')
-  const [email, setEmail] = useState(user?.email ?? '')
+  const [name, setName] = useState(user?.name ?? '')
   const [infoStatus, setInfoStatus] = useState({ type: null, message: '' })
   const [infoLoading, setInfoLoading] = useState(false)
-
-  /* ── Password change ── */
-  const [currentPwd, setCurrentPwd] = useState('')
-  const [newPwd, setNewPwd]         = useState('')
-  const [confirmPwd, setConfirmPwd] = useState('')
-  const [pwdStatus, setPwdStatus]   = useState({ type: null, message: '' })
-  const [pwdLoading, setPwdLoading] = useState(false)
 
   /* ── Company fields ── */
   const [companyForm, setCompanyForm] = useState({
@@ -131,6 +160,7 @@ export default function SettingsPage() {
     email:      company?.email      ?? '',
     address:    company?.address    ?? '',
     city:       company?.city       ?? '',
+    department: company?.department ?? '',
     country:    company?.country    ?? '',
     website:    company?.website    ?? '',
     tagline:    company?.tagline    ?? '',
@@ -143,12 +173,6 @@ export default function SettingsPage() {
   /* ── Logo / Sign upload ── */
   const [logoLoading, setLogoLoading] = useState(false)
   const [signLoading, setSignLoading] = useState(false)
-  const [logoPreview, setLogoPreview] = useState(
-    company?.logoPath ? `${BASE_URL}/uploads/${company.logoPath}` : null
-  )
-  const [signPreview, setSignPreview] = useState(
-    company?.signPath ? `${BASE_URL}/uploads/${company.signPath}` : null
-  )
 
   const initials = (user?.name || user?.email || 'U')
     .split(' ')
@@ -168,39 +192,13 @@ export default function SettingsPage() {
     setInfoLoading(true)
     setInfoStatus({ type: null, message: '' })
     try {
-      const updated = await usersApi.updateMe({ name, email })
+      const updated = await usersApi.updateMe({ name })
       updateUserInContext(updated)
       setInfoStatus({ type: 'success', message: 'Información de cuenta actualizada.' })
     } catch (err) {
       setInfoStatus({ type: 'error', message: err?.response?.data?.error || 'Error al actualizar.' })
     } finally {
       setInfoLoading(false)
-    }
-  }
-
-  async function handleChangePassword(e) {
-    e.preventDefault()
-    if (newPwd !== confirmPwd) {
-      setPwdStatus({ type: 'error', message: 'Las contraseñas nuevas no coinciden.' })
-      return
-    }
-    if (newPwd.length < 6) {
-      setPwdStatus({ type: 'error', message: 'La contraseña debe tener al menos 6 caracteres.' })
-      return
-    }
-    setPwdLoading(true)
-    setPwdStatus({ type: null, message: '' })
-    try {
-      const updated = await usersApi.updateMe({ currentPassword: currentPwd, newPassword: newPwd })
-      updateUserInContext(updated)
-      setPwdStatus({ type: 'success', message: 'Contraseña actualizada correctamente.' })
-      setCurrentPwd('')
-      setNewPwd('')
-      setConfirmPwd('')
-    } catch (err) {
-      setPwdStatus({ type: 'error', message: err?.response?.data?.error || 'Error al cambiar la contraseña.' })
-    } finally {
-      setPwdLoading(false)
     }
   }
 
@@ -224,9 +222,8 @@ export default function SettingsPage() {
     try {
       const updated = await usersApi.uploadLogo(file)
       updateUserInContext(updated)
-      setLogoPreview(URL.createObjectURL(file))
-    } catch {
-      // silent
+    } catch (err) {
+      console.error('Error al subir logo:', err)
     } finally {
       setLogoLoading(false)
     }
@@ -237,9 +234,8 @@ export default function SettingsPage() {
     try {
       const updated = await usersApi.uploadSign(file)
       updateUserInContext(updated)
-      setSignPreview(URL.createObjectURL(file))
-    } catch {
-      // silent
+    } catch (err) {
+      console.error('Error al subir firma:', err)
     } finally {
       setSignLoading(false)
     }
@@ -252,7 +248,7 @@ export default function SettingsPage() {
       {/* Page header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-on-surface tracking-tight font-sans">Configuración</h1>
-        <p className="text-on-surface-variant font-sans mt-1">Administra tu cuenta y el perfil de empresa para la generación de documentos.</p>
+        <p className="text-on-surface-variant font-sans mt-1">Administra tu cuenta de Google y el perfil de empresa.</p>
       </div>
 
       {/* ══════════════════════════════════════════════
@@ -261,8 +257,8 @@ export default function SettingsPage() {
       <div className="space-y-6">
         <SectionHeader
           icon={User}
-          title="Tu Cuenta"
-          description="Datos personales y de seguridad."
+          title="Tu Cuenta de Google"
+          description="Gestión de perfil vinculada a Google OAuth."
         />
 
         <div className="bg-surface-container-lowest shadow-surface-sm rounded-[1.5rem] p-8 border-none grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -270,14 +266,20 @@ export default function SettingsPage() {
           {/* Info Form */}
           <div className="space-y-6">
             <div className="flex items-center gap-4 mb-6">
-              <div className="h-16 w-16 shrink-0 bg-primary text-on-primary flex items-center justify-center rounded-2xl font-bold text-xl shadow-primary-md">
-                {initials}
+              <div className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-primary shadow-primary-md">
+                {user?.avatarUrl ? (
+                  <img src={user.avatarUrl} alt={user.name} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center text-on-primary font-bold text-xl uppercase">
+                    {initials}
+                  </div>
+                )}
               </div>
               <div>
-                <p className="text-sm font-bold text-on-surface font-sans">{user?.name || 'Administrador'}</p>
+                <p className="text-sm font-bold text-on-surface font-sans">{user?.name || 'Usuario'}</p>
                 <p className="text-xs text-on-surface-variant font-medium mt-0.5">{user?.email}</p>
-                <div className="mt-2 inline-flex bg-primary-container text-on-primary-container text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-widest">
-                  {user?.role ?? 'ADMIN'}
+                <div className="mt-2 inline-flex items-center gap-1.5 bg-primary-container text-on-primary-container text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-widest">
+                  <ExternalLink size={10} /> Cuenta de Google
                 </div>
               </div>
             </div>
@@ -285,72 +287,49 @@ export default function SettingsPage() {
             <form onSubmit={handleSaveInfo} className="space-y-4">
                <SettingsInput
                   id="settings-name"
-                  label="Nombre Completo"
+                  label="Nombre de Perfil"
                   value={name}
                   onChange={e => setName(e.target.value)}
                   placeholder="Tu nombre completo"
                 />
                 <SettingsInput
                   id="settings-email"
-                  label="Correo electrónico"
+                  label="Correo vinculado (Google)"
                   type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="tu@correo.com"
+                  value={user?.email || ''}
+                  disabled
                 />
+              <p className="text-[10px] text-on-surface-variant font-medium leading-relaxed italic">
+                * Tu correo electrónico no puede ser modificado ya que es el identificador principal de tu cuenta de Google.
+              </p>
               <Alert type={infoStatus.type} message={infoStatus.message} />
               <button 
                 type="submit" 
                 disabled={infoLoading} 
                 className="w-full bg-secondary-container text-on-secondary-container font-bold text-sm px-6 py-3 rounded-xl hover:bg-secondary-fixed transition-colors active:scale-[0.98] mt-2 disabled:opacity-50"
               >
-                {infoLoading ? 'Guardando...' : 'Actualizar Perfil'}
+                {infoLoading ? 'Guardando...' : 'Guardar Cambios'}
               </button>
             </form>
           </div>
 
-          {/* Password form */}
-          <div className="space-y-6 pt-6 md:pt-0 md:pl-8 md:border-l border-outline-variant/20">
-            <h3 className="text-sm font-bold text-on-surface flex items-center gap-2 font-sans">
-              <Lock size={18} className="text-primary" /> Seguridad
-            </h3>
-            <form onSubmit={handleChangePassword} className="space-y-4">
-              <SettingsInput
-                id="current-pwd"
-                label="Contraseña actual"
-                type="password"
-                value={currentPwd}
-                onChange={e => setCurrentPwd(e.target.value)}
-                placeholder="••••••••"
-                autoComplete="current-password"
-              />
-               <SettingsInput
-                  id="new-pwd"
-                  label="Nueva contraseña"
-                  type="password"
-                  value={newPwd}
-                  onChange={e => setNewPwd(e.target.value)}
-                  placeholder="••••••••"
-                  autoComplete="new-password"
-                />
-                <SettingsInput
-                  id="confirm-pwd"
-                  label="Confirmar contraseña"
-                  type="password"
-                  value={confirmPwd}
-                  onChange={e => setConfirmPwd(e.target.value)}
-                  placeholder="••••••••"
-                  autoComplete="new-password"
-                />
-              <Alert type={pwdStatus.type} message={pwdStatus.message} />
-              <button 
-                type="submit" 
-                disabled={pwdLoading || !currentPwd} 
-                 className="w-full bg-surface-container-high text-on-surface font-bold text-sm px-6 py-3 rounded-xl hover:bg-surface-container-highest transition-colors active:scale-[0.98] mt-2 disabled:opacity-50"
-              >
-                {pwdLoading ? 'Actualizando...' : 'Cambiar Contraseña'}
-              </button>
-            </form>
+          {/* Info Side */}
+          <div className="space-y-6 flex flex-col justify-center items-center text-center p-6 bg-surface-container-low/40 rounded-[1.5rem] border border-outline-variant/10">
+            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-2">
+              <Mail size={24} />
+            </div>
+            <h3 className="text-sm font-bold text-on-surface font-sans">Autenticación Segura</h3>
+            <p className="text-xs text-on-surface-variant font-medium leading-relaxed max-w-xs">
+              Tu acceso está protegido por Google. Los cambios en tu contraseña o seguridad principal deben realizarse a través de tu cuenta de Google.
+            </p>
+            <a 
+              href="https://myaccount.google.com/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="mt-4 text-[10px] font-bold text-primary uppercase tracking-widest hover:underline flex items-center gap-2"
+            >
+              Ir a mi cuenta de Google <ExternalLink size={12} />
+            </a>
           </div>
 
         </div>
@@ -382,7 +361,7 @@ export default function SettingsPage() {
                 icon={Image}
                 hint="PNG o JPG, fondo transparente recomendado"
                 onUpload={handleLogo}
-                preview={logoPreview}
+                isAttached={!!company?.logoPath}
                 loading={logoLoading}
               />
               <UploadCard
@@ -390,7 +369,7 @@ export default function SettingsPage() {
                 icon={PenLine}
                 hint="PNG con fondo transparente recortado a los márgenes"
                 onUpload={handleSign}
-                preview={signPreview}
+                isAttached={!!company?.signPath}
                 loading={signLoading}
               />
             </div>
@@ -400,7 +379,6 @@ export default function SettingsPage() {
           <div className="bg-surface-container-low/40 rounded-[2rem] p-8 border border-outline-variant/10">
             <form onSubmit={handleSaveCompany} className="space-y-10">
               
-              {/* Información Comercial */}
               <div className="space-y-6">
                 <h3 className="text-sm font-bold text-on-surface flex items-center gap-2 font-sans border-b border-outline-variant/10 pb-3">
                   <FileText size={18} className="text-primary" /> Información Comercial
@@ -452,6 +430,13 @@ export default function SettingsPage() {
                     placeholder="Barranquilla"
                   />
                   <SettingsInput
+                    id="c-dept"
+                    label="Departamento / Estado"
+                    value={companyForm.department}
+                    onChange={handleCompanyField('department')}
+                    placeholder="Atlántico"
+                  />
+                  <SettingsInput
                     id="c-country"
                     label="País"
                     value={companyForm.country}
@@ -475,7 +460,6 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* Representante Legal */}
               <div className="space-y-6">
                 <h3 className="text-sm font-bold text-on-surface flex items-center gap-2 font-sans border-b border-outline-variant/10 pb-3 mb-2">
                   <User size={18} className="text-primary" /> Representante Legal

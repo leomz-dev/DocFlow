@@ -1,43 +1,43 @@
-const fs = require('fs');
-const { CLIENTS_DATA_PATH } = require('../../config/constants');
+const prisma = require('../config/prisma');
 
-function readDB() {
-  if (!fs.existsSync(CLIENTS_DATA_PATH)) {
-    fs.writeFileSync(CLIENTS_DATA_PATH, JSON.stringify([]), 'utf-8');
+async function findAll(userId) {
+  if (!userId) return await prisma.client.findMany();
+  return await prisma.client.findMany({
+    where: { userId }
+  });
+}
+
+async function findById(id) {
+  return await prisma.client.findUnique({
+    where: { id }
+  }) || null;
+}
+
+async function save(clientData) {
+  const { id, ...data } = clientData;
+  
+  if (id) {
+    return await prisma.client.upsert({
+      where: { id },
+      update: data,
+      create: { ...data, id }
+    });
   }
-  const raw = fs.readFileSync(CLIENTS_DATA_PATH, 'utf-8');
-  return JSON.parse(raw);
+  
+  return await prisma.client.create({
+    data
+  });
 }
 
-function writeDB(data) {
-  fs.writeFileSync(CLIENTS_DATA_PATH, JSON.stringify(data, null, 2), 'utf-8');
-}
-
-function findAll() {
-  return readDB();
-}
-
-function findById(id) {
-  return readDB().find((c) => c.id === id) || null;
-}
-
-function save(client) {
-  const db = readDB();
-  const idx = db.findIndex((c) => c.id === client.id);
-  if (idx === -1) {
-    db.push(client);
-  } else {
-    db[idx] = client;
+async function remove(id) {
+  try {
+    await prisma.client.delete({
+      where: { id }
+    });
+    return true;
+  } catch (err) {
+    return false;
   }
-  writeDB(db);
-  return client;
-}
-
-function remove(id) {
-  let db = readDB();
-  const filtered = db.filter((c) => c.id !== id);
-  writeDB(filtered);
-  return filtered.length !== db.length;
 }
 
 module.exports = { findAll, findById, save, remove };

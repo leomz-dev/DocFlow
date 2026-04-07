@@ -1,47 +1,49 @@
 const clientService = require('../services/client.service');
 
-function getAll(req, res) {
+async function getAll(req, res, next) {
   try {
-    const data = clientService.getAllClients();
+    // Note: We use req.user.id for multi-tenancy support
+    const data = await clientService.getAllClients(req.user.id);
     res.json(data);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-function getById(req, res) {
+async function getById(req, res, next) {
   try {
-    const data = clientService.getClientById(req.params.id);
+    const data = await clientService.getClientById(req.params.id);
     res.json(data);
   } catch (error) {
-    res.status(404).json({ error: error.message });
+    next(error);
   }
 }
 
-function create(req, res) {
+async function create(req, res, next) {
   try {
-    const data = clientService.createClient(req.body);
+    // Note: Inject creator userId
+    const data = await clientService.createClient({ ...req.body, userId: req.user.id });
     res.status(201).json(data);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(error);
   }
 }
 
-function update(req, res) {
+async function update(req, res, next) {
   try {
-    const data = clientService.updateClient(req.params.id, req.body);
+    const data = await clientService.updateClient(req.params.id, req.body);
     res.json(data);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(error);
   }
 }
 
-function remove(req, res) {
+async function remove(req, res, next) {
   try {
-    clientService.deleteClient(req.params.id);
+    await clientService.deleteClient(req.params.id);
     res.json({ success: true });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(error);
   }
 }
 

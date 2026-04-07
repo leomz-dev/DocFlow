@@ -25,13 +25,23 @@ const TEMPLATES_DIR = path.resolve(__dirname, '../templates');
 async function getBase64Image(relativePath) {
   if (!relativePath) return null;
   try {
-    const absPath = path.join(BASE_UPLOAD_PATH, relativePath);
+    // Normalizar la ruta para evitar problemas con slashes iniciales en path.join
+    const cleanRelativePath = relativePath.startsWith('/') || relativePath.startsWith('\\') 
+      ? relativePath.substring(1) 
+      : relativePath;
+      
+    const absPath = path.join(BASE_UPLOAD_PATH, cleanRelativePath);
+    
+    // Verificar si el archivo existe antes de leerlo
+    await fs.access(absPath);
+    
     const imgBuf = await fs.readFile(absPath);
     const ext = path.extname(absPath).substring(1).toLowerCase() || 'png';
     const mime = ext === 'jpg' ? 'jpeg' : ext;
+    
     return `data:image/${mime};base64,${imgBuf.toString('base64')}`;
   } catch (err) {
-    console.warn('Could not load image to base64:', relativePath, err.message);
+    console.error(`[PDF Service] Error cargando imagen (${relativePath}):`, err.message);
     return null;
   }
 }
@@ -113,7 +123,7 @@ async function saveAndRegister(userId, docType, docNumber, buffer, metadata = {}
     createdAt: new Date().toISOString(),
   };
 
-  documentRepo.addDocument(userId, docEntry);
+  await documentRepo.addDocument(userId, docEntry);
   return docEntry;
 }
 

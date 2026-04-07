@@ -33,8 +33,8 @@ export function AuthProvider({ children }) {
     initAuth()
   }, [])
 
-  const login = useCallback(async (email, password) => {
-    const { token, user: userData } = await authApi.login(email, password)
+  const loginWithGoogle = useCallback(async (credential) => {
+    const { token, user: userData } = await authApi.googleLogin(credential)
     localStorage.setItem(STORAGE_KEY_TOKEN, token)
     localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(userData))
     setUser(userData)
@@ -58,7 +58,7 @@ export function AuthProvider({ children }) {
     company: user?.company ?? null,
     isAuthenticated: !!user,
     loading,
-    login,
+    loginWithGoogle,
     logout,
     updateUserInContext,
   }

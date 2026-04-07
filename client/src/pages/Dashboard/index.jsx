@@ -79,7 +79,7 @@ export default function DashboardPage() {
   const [loadingDocs, setLoadingDocs] = useState(true)
   const [docsError, setDocsError]     = useState(null)
 
-  const displayName = company?.name || user?.email?.split('@')[0] || 'aquí'
+  const displayName = company?.legalRep?.split(' ')[0] || user?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'aquí'
 
   useEffect(() => {
     const fetchRecent = async () => {

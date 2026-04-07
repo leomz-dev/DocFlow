@@ -15,21 +15,21 @@ const { DOC_PREFIXES, DOC_COUNTER_KEYS } = require('../../config/constants');
 async function buildDocumentData(userId, body) {
   const { type, client, items = [], notes = '', date, clauses = [] } = body;
 
-  const user = userRepo.findById(userId);
+  const user = await userRepo.findById(userId);
   if (!user) throw Object.assign(new Error('Usuario no encontrado'), { status: 404 });
 
   const counterKey = DOC_COUNTER_KEYS[type];
   if (!counterKey) throw Object.assign(new Error(`Tipo de documento inválido: ${type}`), { status: 400 });
 
-  // Increment counter atomically
-  const counter = userRepo.incrementCounter(userId, counterKey);
+  // Increment counter atomically in DB
+  const counter = await userRepo.incrementCounter(userId, counterKey);
   const prefix  = DOC_PREFIXES[type];
   const docNumber = `${prefix}-${String(counter).padStart(4, '0')}`;
 
   // Calculate totals
   const subtotal  = items.reduce((sum, i) => sum + (i.quantity * i.unitPrice), 0);
-  const ivaRate   = user.company.taxConfig?.ivaRate ?? 19;
-  const retRate   = user.company.taxConfig?.retencionRate ?? 0;
+  const ivaRate   = user.company?.taxConfig?.ivaRate ?? 19;
+  const retRate   = user.company?.taxConfig?.retencionRate ?? 0;
   const ivaAmount = type === 'cuenta-cobro' ? 0 : subtotal * (ivaRate / 100);
   const retAmount = type === 'cuenta-cobro' ? 0 : subtotal * (retRate / 100);
   const total     = subtotal + ivaAmount - retAmount;
@@ -64,8 +64,8 @@ async function buildDocumentData(userId, body) {
 /**
  * Returns the document history for a user.
  */
-function listHistory(userId) {
-  return documentRepo.listByUser(userId);
+async function listHistory(userId) {
+  return await documentRepo.listByUser(userId);
 }
 
 module.exports = { buildDocumentData, listHistory };

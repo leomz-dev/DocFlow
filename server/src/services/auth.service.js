@@ -1,37 +1,72 @@
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { JWT_SECRET, JWT_EXPIRES_IN } = require('../../config/env');
+const { OAuth2Client } = require('google-auth-library');
+const { JWT_SECRET, JWT_EXPIRES_IN, GOOGLE_CLIENT_ID } = require('../../config/env');
 const userRepo = require('../repositories/user.repository');
 
+const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
+
 /**
- * Verifies credentials and returns JWT + company data.
- * @param {string} email
- * @param {string} password
- * @returns {{ token: string, user: object }}
+ * Verifies a Google ID token and returns the payload.
  */
-async function login(email, password) {
-  const user = userRepo.findByEmail(email);
-  if (!user || !user.active) {
-    throw Object.assign(new Error('Credenciales inválidas'), { status: 401 });
+async function verifyGoogleToken(idToken) {
+  const ticket = await googleClient.verifyIdToken({
+    idToken,
+    audience: GOOGLE_CLIENT_ID,
+  });
+  const payload = ticket.getPayload();
+  if (!payload || !payload.email) {
+    throw Object.assign(new Error('Token de Google inválido'), { status: 401 });
+  }
+  return payload;
+}
+
+/**
+ * Authenticates via Google OAuth.
+ */
+async function loginWithGoogle(googleIdToken) {
+  const googlePayload = await verifyGoogleToken(googleIdToken);
+  const { email, name, sub: googleId, picture } = googlePayload;
+
+  let user = await userRepo.findByEmail(email.toLowerCase());
+
+  if (user && !user.active) {
+    throw Object.assign(new Error('Cuenta desactivada'), { status: 403 });
   }
 
-  const valid = await bcrypt.compare(password, user.password);
-  if (!valid) {
-    throw Object.assign(new Error('Credenciales inválidas'), { status: 401 });
+  if (!user) {
+    const { v4: uuidv4 } = require('uuid');
+    const newId = uuidv4();
+
+    user = await userRepo.save({
+      id: newId,
+      name: name || email.split('@')[0],
+      email: email.toLowerCase(),
+      password: null,
+      googleId,
+      avatarUrl: picture || null,
+      role: 'admin',
+      active: true,
+      counters: { cuentaCobro: 0, cotizacion: 0, contrato: 0 },
+      templates: { cuentaCobro: 'default', cotizacion: 'default', contrato: 'default' },
+    });
+  } else if (!user.googleId) {
+    await userRepo.save({
+      ...user,
+      googleId,
+      avatarUrl: user.avatarUrl || picture || null,
+    });
+    user = await userRepo.findByEmail(email.toLowerCase());
   }
 
   const payload = { id: user.id, email: user.email, role: user.role };
   const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 
-  // Return user data without password
   const { password: _pw, ...safeUser } = user;
   return { token, user: safeUser };
 }
 
 /**
- * Verifies a JWT and returns its payload.
- * @param {string} token
- * @returns {object} decoded payload
+ * Verifies a JWT.
  */
 function verifyToken(token) {
   try {
@@ -41,13 +76,4 @@ function verifyToken(token) {
   }
 }
 
-/**
- * Hashes a plain-text password.
- * @param {string} plain
- * @returns {Promise<string>}
- */
-async function hashPassword(plain) {
-  return bcrypt.hash(plain, 10);
-}
-
-module.exports = { login, verifyToken, hashPassword };
+module.exports = { loginWithGoogle, verifyToken };

@@ -1,39 +1,39 @@
-const crypto = require('crypto');
 const repo = require('../repositories/client.repository');
 
-function getAllClients() {
-  return repo.findAll();
+async function getAllClients(userId) {
+  return await repo.findAll(userId);
 }
 
-function getClientById(id) {
-  const client = repo.findById(id);
+async function getClientById(id) {
+  const client = await repo.findById(id);
   if (!client) throw new Error('Cliente no encontrado');
   return client;
 }
 
-function createClient(data) {
-  const client = {
-    id: crypto.randomUUID(),
+async function createClient(data) {
+  // Nota: Dejamos que Prisma maneje el ID o usamos data.id si viene del frontend.
+  // Pero mantenemos la coherencia de fechas.
+  const clientData = {
     ...data,
     createdAt: new Date().toISOString()
   };
-  return repo.save(client);
+  return await repo.save(clientData);
 }
 
-function updateClient(id, data) {
-  const existing = getClientById(id);
+async function updateClient(id, data) {
+  const existing = await getClientById(id);
   const updated = {
     ...existing,
     ...data,
     id, // ensure ID doesn't change
     updatedAt: new Date().toISOString()
   };
-  return repo.save(updated);
+  return await repo.save(updated);
 }
 
-function deleteClient(id) {
-  const deleted = repo.remove(id);
-  if (!deleted) throw new Error('Cliente no encontrado');
+async function deleteClient(id) {
+  const deleted = await repo.remove(id);
+  if (!deleted) throw new Error('Cliente no encontrado o no se pudo eliminar');
   return true;
 }
 

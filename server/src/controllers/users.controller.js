@@ -2,7 +2,7 @@ const usersService = require('../services/users.service');
 
 async function getMe(req, res, next) {
   try {
-    const user = usersService.getProfile(req.user.id);
+    const user = await usersService.getProfile(req.user.id);
     res.json(user);
   } catch (err) {
     next(err);
@@ -11,7 +11,7 @@ async function getMe(req, res, next) {
 
 async function updateMe(req, res, next) {
   try {
-    const updated = usersService.updateCompany(req.user.id, req.body);
+    const updated = await usersService.updateCompany(req.user.id, req.body);
     res.json(updated);
   } catch (err) {
     next(err);

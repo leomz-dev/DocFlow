@@ -30,11 +30,4 @@ function formatDateLong(iso) {
   });
 }
 
-/**
- * Returns today's date as yyyy-mm-dd (Colombian timezone).
- */
-function today() {
-  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Bogota' });
-}
-
-module.exports = { formatDate, formatDateLong, today };
+module.exports = { formatDate, formatDateLong };

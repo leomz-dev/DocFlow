@@ -1,11 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, Navigate, useNavigate } from 'react-router-dom'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import {
   FileText, Plus, Trash2, ArrowRight, Loader2, AlertCircle,
-  User, List, StickyNote, ScrollText, GripVertical, Check, ChevronRight, ArrowLeft
+  User, List, StickyNote, ScrollText, GripVertical, ChevronRight, ArrowLeft
 } from 'lucide-react'
 import { useDocument } from '@/hooks/useDocument'
 import { PDFPreview } from '@/components/PDFPreview'
@@ -16,8 +16,8 @@ const VALID_TYPES = ['cuenta-cobro', 'cotizacion', 'contrato']
 
 const TITLES = {
   'cuenta-cobro': { label: 'Cuenta de Cobro', crumb: 'Cuentas' },
-  'cotizacion':   { label: 'Cotización',       crumb: 'Cotizaciones' },
-  'contrato':     { label: 'Contrato',          crumb: 'Contratos' },
+  'cotizacion': { label: 'Cotización', crumb: 'Cotizaciones' },
+  'contrato': { label: 'Contrato', crumb: 'Contratos' },
 }
 
 /* ── Default clauses for contracts ─────────────────── */
@@ -39,28 +39,28 @@ const DEFAULT_CLAUSES = [
 /* ── Schemas ────────────────────────────────────────── */
 const itemSchema = z.object({
   description: z.string().min(1, 'Descripción requerida'),
-  quantity:    z.number({ coerce: true }).min(1, 'Min 1'),
-  unitPrice:   z.number({ coerce: true }).min(0, 'Valor inválido'),
+  quantity: z.number({ coerce: true }).min(1, 'Min 1'),
+  unitPrice: z.number({ coerce: true }).min(0, 'Valor inválido'),
 })
 
 const clauseSchema = z.object({
-  title:   z.string().min(1, 'Título requerido'),
+  title: z.string().min(1, 'Título requerido'),
   content: z.string().min(1, 'Contenido requerido'),
 })
 
 const schema = z.object({
   client: z.object({
-    name:    z.string().min(1, 'Nombre requerido'),
-    nit:     z.string().optional(),
+    name: z.string().min(1, 'Nombre requerido'),
+    nit: z.string().optional(),
     address: z.string().optional(),
-    city:    z.string().optional(),
-    phone:   z.string().optional(),
-    email:   z.string().email('Email inválido').optional().or(z.literal('')),
+    city: z.string().optional(),
+    phone: z.string().optional(),
+    email: z.string().email('Email inválido').optional().or(z.literal('')),
   }),
-  items:   z.array(itemSchema).min(1, 'Agrega al menos un ítem'),
+  items: z.array(itemSchema).min(1, 'Agrega al menos un ítem'),
   clauses: z.array(clauseSchema).optional(),
-  notes:   z.string().optional(),
-  date:    z.string().optional(),
+  notes: z.string().optional(),
+  date: z.string().optional(),
 })
 
 /* ── UI Components ───────────────────────────────────── */
@@ -72,11 +72,11 @@ function FieldInput({ register, error, type = "text", placeholder, options, clas
     if (register?.onChange) register.onChange(e)
     if (onChange) onChange(e)
   }
-  
+
   if (type === 'select' && options) {
     return (
-      <select 
-        {...register} 
+      <select
+        {...register}
         {...props}
         onChange={handleChange}
         className={cn(baseClasses, "appearance-none", errorClasses, className)}
@@ -87,27 +87,27 @@ function FieldInput({ register, error, type = "text", placeholder, options, clas
       </select>
     )
   }
-  
+
   if (type === 'textarea') {
     return (
-      <textarea 
+      <textarea
         {...register}
         {...props}
         onChange={handleChange}
-        placeholder={placeholder} 
-        className={cn(baseClasses, "min-h-[100px] resize-y", errorClasses, className)} 
+        placeholder={placeholder}
+        className={cn(baseClasses, "min-h-[100px] resize-y", errorClasses, className)}
       />
     )
   }
 
   return (
-    <input 
+    <input
       {...register}
       {...props}
       onChange={handleChange}
-      type={type} 
-      placeholder={placeholder} 
-      className={cn(baseClasses, errorClasses, className)} 
+      type={type}
+      placeholder={placeholder}
+      className={cn(baseClasses, errorClasses, className)}
     />
   )
 }
@@ -127,10 +127,10 @@ function ClausesSection({ control, register, errors }) {
 
   return (
     <section className="bg-surface-container-lowest rounded-[1.5rem] p-8 shadow-surface-sm transition-all duration-300 hover:shadow-surface-md">
-       <header className="flex items-center justify-between mb-8 border-b border-outline-variant/10 pb-4">
+      <header className="flex items-center justify-between mb-8 border-b border-outline-variant/10 pb-4">
         <h2 className="text-xl font-semibold text-on-surface font-sans">Cláusulas del Contrato</h2>
-        <button 
-          type="button" 
+        <button
+          type="button"
           onClick={() => append({ title: '', content: '' })}
           className="flex items-center gap-2 bg-secondary-container text-on-secondary-container px-4 py-2 rounded-xl text-sm font-bold hover:bg-secondary-fixed transition-colors active:scale-95"
         >
@@ -142,7 +142,7 @@ function ClausesSection({ control, register, errors }) {
       <div className="space-y-6">
         {fields.map((field, index) => (
           <div key={field.id} className="relative bg-surface-container-low p-6 rounded-[1.5rem] space-y-4 border border-outline-variant/10">
-             <button
+            <button
               type="button"
               className="absolute top-6 right-6 text-on-surface-variant/40 hover:text-error transition-colors"
               onClick={() => remove(index)}
@@ -151,18 +151,18 @@ function ClausesSection({ control, register, errors }) {
             </button>
             <div className="pr-10">
               <FieldLabel error={errors?.clauses?.[index]?.title?.message}>Cláusula {index + 1} - Titulo</FieldLabel>
-              <FieldInput 
-                register={register(`clauses.${index}.title`)} 
-                placeholder="Ej: Primera — Objeto del Contrato" 
+              <FieldInput
+                register={register(`clauses.${index}.title`)}
+                placeholder="Ej: Primera — Objeto del Contrato"
                 error={errors?.clauses?.[index]?.title?.message}
               />
             </div>
             <div>
               <FieldLabel error={errors?.clauses?.[index]?.content?.message}>Contenido</FieldLabel>
-              <FieldInput 
+              <FieldInput
                 type="textarea"
-                register={register(`clauses.${index}.content`)} 
-                placeholder="Redacta el contenido de esta cláusula..." 
+                register={register(`clauses.${index}.content`)}
+                placeholder="Redacta el contenido de esta cláusula..."
                 error={errors?.clauses?.[index]?.content?.message}
               />
             </div>
@@ -191,17 +191,17 @@ export default function NewDocumentPage() {
   const { register, control, handleSubmit, setValue: setFormValue, formState: { errors }, watch } = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
-      client:  { name: '', nit: '', address: '', city: '', phone: '', email: '' },
-      items:   [{ description: '', quantity: 1, unitPrice: 0 }],
+      client: { name: '', nit: '', address: '', city: '', phone: '', email: '' },
+      items: [{ description: '', quantity: 1, unitPrice: 0 }],
       clauses: isContract ? DEFAULT_CLAUSES : [],
-      notes:   '',
-      date:    new Date().toISOString().split('T')[0],
+      notes: '',
+      date: new Date().toISOString().split('T')[0],
     }
   })
 
   const { fields, append, remove } = useFieldArray({ control, name: 'items' })
   const itemsWatch = watch('items')
-  const subtotal   = itemsWatch.reduce((acc, obj) => acc + ((+obj.quantity || 0) * (+obj.unitPrice || 0)), 0)
+  const subtotal = itemsWatch.reduce((acc, obj) => acc + ((+obj.quantity || 0) * (+obj.unitPrice || 0)), 0)
 
   if (!VALID_TYPES.includes(type)) return <Navigate to="/dashboard" replace />
 
@@ -209,7 +209,16 @@ export default function NewDocumentPage() {
 
   const handleClientSelect = (e) => {
     const clientId = e.target.value
-    if (!clientId) return
+    if (!clientId) {
+      // Clear fields if no client is selected (shortcut to reset or manual entry)
+      setFormValue('client.name', '')
+      setFormValue('client.nit', '')
+      setFormValue('client.email', '')
+      setFormValue('client.address', '')
+      setFormValue('client.city', '')
+      setFormValue('client.phone', '')
+      return
+    }
     const selected = clients.find(c => c.id === clientId)
     if (selected) {
       setFormValue('client.name', selected.name || '')
@@ -220,6 +229,8 @@ export default function NewDocumentPage() {
       setFormValue('client.phone', selected.phone || '')
     }
   }
+
+
 
   const onSubmit = async (data) => {
     try {
@@ -234,46 +245,22 @@ export default function NewDocumentPage() {
   }
 
   // Derived styling helpers
-  const clientOptions = [{ value: '', label: 'Selecciona un cliente predefinido...', disabled: true }, ...clients.map(c => ({ value: c.id, label: `${c.name} ${c.nit ? `- ${c.nit}` : ''}` }))]
+  const clientOptions = [{ value: '', label: 'Selecciona un cliente predefinido...' }, ...clients.map(c => ({ value: c.id, label: `${c.name} ${c.nit ? `- ${c.nit}` : ''}` }))]
 
   return (
     <div className="animate-fade-in pb-24">
 
-      {/* Stepper */}
-      <div className="mb-12">
-        <div className="flex items-center justify-center max-w-2xl mx-auto">
-          <div className="flex flex-col items-center flex-1 relative">
-            <div className="w-10 h-10 rounded-full bg-tertiary-fixed text-tertiary flex items-center justify-center z-10 shadow-sm">
-              <Check size={20} className="font-bold" />
-            </div>
-            <span className="mt-2 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest text-center">Detalles</span>
-            <div className="absolute top-5 left-1/2 w-full h-0.5 bg-outline-variant/40"></div>
-          </div>
-          <div className="flex flex-col items-center flex-1 relative">
-            <div className="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center z-10 shadow-primary-md ring-4 ring-primary/10">
-              <span className="text-sm font-bold">2</span>
-            </div>
-            <span className="mt-2 text-[10px] font-bold text-primary uppercase tracking-widest text-center">Items y Totales</span>
-            <div className="absolute top-5 left-1/2 w-full h-0.5 bg-surface-container-highest"></div>
-          </div>
-          <div className="flex flex-col items-center flex-1 relative">
-            <div className="w-10 h-10 rounded-full bg-surface-container-highest text-on-surface-variant flex items-center justify-center z-10">
-              <span className="text-sm font-bold">3</span>
-            </div>
-            <span className="mt-2 text-[10px] font-bold text-on-surface-variant/50 uppercase tracking-widest text-center">Revisión</span>
-          </div>
-        </div>
-      </div>
+
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-        
+
         {/* Section 1: Basic Info */}
         <section className="bg-surface-container-lowest rounded-[1.5rem] p-8 shadow-surface-sm transition-all duration-300 hover:shadow-surface-md">
           <header className="flex items-center justify-between mb-8 border-b border-outline-variant/10 pb-4">
             <h2 className="text-xl font-semibold text-on-surface font-sans">Información Básica</h2>
             <span className="text-[10px] font-bold bg-primary-container text-on-primary-container px-3 py-1 rounded-full uppercase tracking-widest text-center">{info.label}</span>
           </header>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             <div className="md:col-span-2">
               <FieldLabel>Cargar Cliente Guardado</FieldLabel>
@@ -304,7 +291,7 @@ export default function NewDocumentPage() {
               <FieldLabel>Teléfono</FieldLabel>
               <FieldInput register={register('client.phone')} placeholder="300..." />
             </div>
-             <div>
+            <div>
               <FieldLabel>Fecha de Emisión</FieldLabel>
               <FieldInput register={register('date')} type="date" />
             </div>
@@ -312,11 +299,11 @@ export default function NewDocumentPage() {
         </section>
 
         {/* Section 2: Items Table */}
-         <section className="bg-surface-container-lowest rounded-[1.5rem] p-8 shadow-surface-sm transition-all duration-300 hover:shadow-surface-md overflow-hidden">
+        <section className="bg-surface-container-lowest rounded-[1.5rem] p-8 shadow-surface-sm transition-all duration-300 hover:shadow-surface-md overflow-hidden">
           <header className="flex items-center justify-between mb-8">
             <h2 className="text-xl font-semibold text-on-surface font-sans">Ítems del Documento</h2>
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={() => append({ description: '', quantity: 1, unitPrice: 0 })}
               className="flex items-center gap-2 bg-secondary-container text-on-secondary-container px-4 py-2 rounded-xl text-sm font-bold hover:bg-secondary-fixed transition-colors active:scale-95"
             >
@@ -343,18 +330,18 @@ export default function NewDocumentPage() {
 
             {/* List of Items */}
             <div className="space-y-4 md:space-y-2">
-               {fields.map((field, index) => {
+              {fields.map((field, index) => {
                 const qty = +itemsWatch[index]?.quantity || 0
                 const price = +itemsWatch[index]?.unitPrice || 0
                 const total = qty * price
-                
+
                 return (
                   <div key={field.id} className="group relative flex flex-col md:flex-row gap-4 md:gap-0 bg-surface-container-low/60 rounded-[1.5rem] md:rounded-[1rem] p-6 md:p-1 border border-outline-variant/10 md:border-none md:items-center hover:bg-surface-container-low transition-all">
-                    
+
                     {/* Description Section */}
                     <div className="flex-1">
                       <label className="md:hidden block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2 opacity-60">Descripción del Ítem</label>
-                      <input 
+                      <input
                         {...register(`items.${index}.description`)}
                         placeholder="Escribe la descripción..."
                         className={cn(
@@ -368,7 +355,7 @@ export default function NewDocumentPage() {
                       {/* Quantity Section */}
                       <div className="md:w-24">
                         <label className="md:hidden block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2 opacity-60">Cantidad</label>
-                        <input 
+                        <input
                           {...register(`items.${index}.quantity`)}
                           type="number" min="1" step="0.01"
                           className="w-full bg-surface-container-lowest md:bg-transparent border-none px-4 py-3 md:py-4 rounded-xl md:rounded-none focus:ring-0 text-sm font-bold md:font-medium outline-none text-on-surface text-left md:text-center"
@@ -379,12 +366,12 @@ export default function NewDocumentPage() {
                       <div className="md:w-40">
                         <label className="md:hidden block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2 opacity-60">Valor Unitario</label>
                         <div className="flex items-center gap-1.5 px-4 py-3 md:py-2.5 bg-surface-container-lowest md:bg-surface-container-lowest/50 rounded-xl md:rounded-lg md:mx-2 border border-outline-variant/10 group-hover:border-primary/20 transition-colors">
-                           <span className="text-[10px] text-primary/60 font-black">$</span>
-                           <input 
-                             {...register(`items.${index}.unitPrice`)}
-                             type="number" min="0" step="100"
-                             className="w-full bg-transparent border-none p-0 focus:ring-0 text-sm font-bold md:font-medium outline-none text-on-surface"
-                           />
+                          <span className="text-[10px] text-primary/60 font-black">$</span>
+                          <input
+                            {...register(`items.${index}.unitPrice`)}
+                            type="number" min="0" step="100"
+                            className="w-full bg-transparent border-none p-0 focus:ring-0 text-sm font-bold md:font-medium outline-none text-on-surface"
+                          />
                         </div>
                       </div>
 
@@ -398,14 +385,14 @@ export default function NewDocumentPage() {
 
                       {/* Delete Action Section */}
                       <div className="md:w-16 flex items-center justify-end">
-                         <button 
-                            type="button"
-                            onClick={() => remove(index)}
-                            disabled={fields.length === 1}
-                            className="w-12 h-12 md:w-full md:h-full flex items-center justify-center text-on-surface-variant/40 hover:text-error hover:bg-error-container/10 md:hover:bg-transparent rounded-xl transition-all disabled:opacity-30 disabled:hover:bg-transparent"
-                          >
-                            <Trash2 size={20} />
-                          </button>
+                        <button
+                          type="button"
+                          onClick={() => remove(index)}
+                          disabled={fields.length === 1}
+                          className="w-12 h-12 md:w-full md:h-full flex items-center justify-center text-on-surface-variant/40 hover:text-error hover:bg-error-container/10 md:hover:bg-transparent rounded-xl transition-all disabled:opacity-30 disabled:hover:bg-transparent"
+                        >
+                          <Trash2 size={20} />
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -422,7 +409,7 @@ export default function NewDocumentPage() {
 
         {/* Section 4: Totals & Notes Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
+
           {/* Notes */}
           <div className="lg:col-span-7 bg-surface-container-lowest rounded-[1.5rem] p-8 shadow-surface-sm h-full">
             <header className="mb-6">
@@ -430,12 +417,12 @@ export default function NewDocumentPage() {
               <p className="text-xs text-on-surface-variant mt-1 font-sans">Información adicional que aparecerá al pie del documento.</p>
             </header>
             <div className="space-y-6">
-               <div>
+              <div>
                 <FieldLabel>Observaciones ({isContract ? "Finales" : "Generales"})</FieldLabel>
-                <FieldInput 
-                  type="textarea" 
-                  register={register('notes')} 
-                  placeholder={isContract ? "Condiciones adicionales, aclaraciones u observaciones finales antes de firmas..." : "Condiciones de pago, aclaraciones, vigencia..."} 
+                <FieldInput
+                  type="textarea"
+                  register={register('notes')}
+                  placeholder={isContract ? "Condiciones adicionales, aclaraciones u observaciones finales antes de firmas..." : "Condiciones de pago, aclaraciones, vigencia..."}
                 />
               </div>
             </div>
@@ -445,7 +432,7 @@ export default function NewDocumentPage() {
           <div className="lg:col-span-5 bg-surface-container-low rounded-[1.5rem] p-8 shadow-none border border-outline-variant/10">
             <h2 className="text-xl font-semibold text-on-surface font-sans mb-8">Resumen Financiero</h2>
             <div className="space-y-4 font-sans">
-              
+
               <div className="pt-4 border-t border-outline-variant/20 flex justify-between items-end">
                 <div>
                   <span className="block text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Total Final</span>
@@ -458,7 +445,7 @@ export default function NewDocumentPage() {
 
         </div>
 
-         {/* Error Alert */}
+        {/* Error Alert */}
         {error && (
           <div className="flex items-center gap-2 rounded-xl bg-error-container/20 border border-error/50 px-5 py-4 text-sm font-semibold text-error mb-4">
             <AlertCircle size={18} className="shrink-0" /> {error}
@@ -467,28 +454,28 @@ export default function NewDocumentPage() {
 
         {/* Footer Navigation */}
         <footer className="mt-12 flex flex-col md:flex-row items-center justify-between py-6 border-t border-outline-variant/20 gap-4">
-           <button 
-             type="button" 
-             onClick={() => navigate(-1)}
-             className="flex flex-1 md:flex-none items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-on-surface-variant hover:bg-surface-container-high transition-colors active:scale-95"
-           >
-             <ArrowLeft size={18} />
-             Cancelar
-           </button>
-           
-           <div className="flex w-full md:w-auto gap-4">
-              <button 
-                 type="submit"
-                 disabled={loading}
-                 className="flex flex-1 md:flex-none items-center justify-center gap-2 px-8 py-3 bg-gradient-to-br from-primary-container to-primary text-on-primary rounded-xl text-sm font-bold shadow-primary-md hover:shadow-primary-lg transition-all active:scale-95 disabled:opacity-70 disabled:pointer-events-none"
-              >
-                {loading ? (
-                  <><Loader2 size={18} className="animate-spin" /> Generando...</>
-                ) : (
-                  <> Generar y Previsualizar <ChevronRight size={18} /></>
-                )}
-              </button>
-           </div>
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="flex flex-1 md:flex-none items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-on-surface-variant hover:bg-surface-container-high transition-colors active:scale-95"
+          >
+            <ArrowLeft size={18} />
+            Cancelar
+          </button>
+
+          <div className="flex w-full md:w-auto gap-4">
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex flex-1 md:flex-none items-center justify-center gap-2 px-8 py-3 bg-gradient-to-br from-primary-container to-primary text-on-primary rounded-xl text-sm font-bold shadow-primary-md hover:shadow-primary-lg transition-all active:scale-95 disabled:opacity-70 disabled:pointer-events-none"
+            >
+              {loading ? (
+                <><Loader2 size={18} className="animate-spin" /> Generando...</>
+              ) : (
+                <> Generar y Previsualizar <ChevronRight size={18} /></>
+              )}
+            </button>
+          </div>
         </footer>
 
       </form>

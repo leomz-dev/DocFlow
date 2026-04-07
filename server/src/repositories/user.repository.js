@@ -1,49 +1,79 @@
-const fs = require('fs');
-const path = require('path');
-const { DATA_PATH } = require('../../config/constants');
-
-/** Lee el JSON completo desde disco */
-function readDB() {
-  const raw = fs.readFileSync(DATA_PATH, 'utf-8');
-  return JSON.parse(raw);
-}
-
-/** Escribe el JSON completo a disco */
-function writeDB(data) {
-  fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2), 'utf-8');
-}
-
-/** Devuelve todos los usuarios */
-function findAll() {
-  return readDB().users;
-}
+const prisma = require('../config/prisma');
 
 /** Busca un usuario por ID */
-function findById(id) {
-  return readDB().users.find((u) => u.id === id) || null;
+async function findById(id) {
+  return await prisma.user.findUnique({
+    where: { id },
+    include: {
+      company: true,
+      counters: true,
+      templates: true,
+      documents: true,
+      clients: true,
+    },
+  }) || null;
 }
 
 /** Busca un usuario por email (case-insensitive) */
-function findByEmail(email) {
-  return readDB().users.find(
-    (u) => u.email.toLowerCase() === email.toLowerCase()
-  ) || null;
+async function findByEmail(email) {
+  return await prisma.user.findUnique({
+    where: { email: email.toLowerCase() },
+    include: {
+      company: true,
+      counters: true,
+      templates: true,
+      documents: true,
+      clients: true,
+    },
+  }) || null;
 }
 
 /**
- * Inserta o actualiza un usuario completo.
- * Si ya existe un usuario con el mismo id, lo reemplaza.
+ * Inserta o actualiza un usuario completo utilizando Prisma upsert.
+ * Maneja la creación/actualización anidada de compañía, plantillas y contadores.
  */
-function save(user) {
-  const db = readDB();
-  const idx = db.users.findIndex((u) => u.id === user.id);
-  if (idx === -1) {
-    db.users.push(user);
-  } else {
-    db.users[idx] = user;
-  }
-  writeDB(db);
-  return user;
+async function save(userData) {
+  const { 
+    id, company, templates, counters, clients, documents, 
+    createdAt, updatedAt, ...baseData 
+  } = userData;
+
+  // Aseguramos que el email sea minúscula
+  if (baseData.email) baseData.email = baseData.email.toLowerCase();
+
+  // Prisma no permite pasar la clave foránea (userId) manualmente en una escritura anidada
+  const cleanComp = company ? { ...company } : undefined;
+  if (cleanComp) delete cleanComp.userId;
+
+  const cleanTemp = templates ? { ...templates } : undefined;
+  if (cleanTemp) delete cleanTemp.userId;
+
+  const cleanCount = counters ? { ...counters } : undefined;
+  if (cleanCount) delete cleanCount.userId;
+
+  return await prisma.user.upsert({
+    where: { id: id || '' },
+    update: {
+      ...baseData,
+      company: cleanComp ? { upsert: { create: cleanComp, update: cleanComp } } : undefined,
+      templates: cleanTemp ? { upsert: { create: cleanTemp, update: cleanTemp } } : undefined,
+      counters: cleanCount ? { upsert: { create: cleanCount, update: cleanCount } } : undefined,
+    },
+    create: {
+      ...baseData,
+      id: id,
+      company: cleanComp ? { create: cleanComp } : undefined,
+      templates: cleanTemp ? { create: cleanTemp } : undefined,
+      counters: cleanCount ? { create: cleanCount } : { create: {} },
+    },
+    include: {
+      company: true,
+      counters: true,
+      templates: true,
+      documents: true,
+      clients: true,
+    },
+  });
 }
 
 /**
@@ -52,13 +82,15 @@ function save(user) {
  * @param {'cuentaCobro'|'cotizacion'|'contrato'} counterKey
  * @returns {number} nuevo valor del contador
  */
-function incrementCounter(userId, counterKey) {
-  const db = readDB();
-  const user = db.users.find((u) => u.id === userId);
-  if (!user) throw new Error(`User not found: ${userId}`);
-  user.counters[counterKey] = (user.counters[counterKey] || 0) + 1;
-  writeDB(db);
-  return user.counters[counterKey];
+async function incrementCounter(userId, counterKey) {
+  const updated = await prisma.counter.update({
+    where: { userId },
+    data: {
+      [counterKey]: { increment: 1 }
+    }
+  });
+
+  return updated[counterKey];
 }
 
-module.exports = { findAll, findById, findByEmail, save, incrementCounter };
+module.exports = { findById, findByEmail, save, incrementCounter };

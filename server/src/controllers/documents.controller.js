@@ -40,7 +40,7 @@ async function generate(req, res, next) {
 
 async function getHistory(req, res, next) {
   try {
-    const history = documentsService.listHistory(req.user.id);
+    const history = await documentsService.listHistory(req.user.id);
     res.json(history);
   } catch (err) {
     next(err);
@@ -49,7 +49,7 @@ async function getHistory(req, res, next) {
 
 async function download(req, res, next) {
   try {
-    const doc = documentRepo.findDocument(req.user.id, req.params.id);
+    const doc = await documentRepo.findDocument(req.user.id, req.params.id);
     if (!doc) return res.status(404).json({ error: 'Documento no encontrado' });
 
     const absPath = storage.getPath(doc.filePath);
@@ -63,11 +63,11 @@ async function download(req, res, next) {
 
 async function remove(req, res, next) {
   try {
-    const doc = documentRepo.findDocument(req.user.id, req.params.id);
+    const doc = await documentRepo.findDocument(req.user.id, req.params.id);
     if (!doc) return res.status(404).json({ error: 'Documento no encontrado' });
 
     await storage.remove(doc.filePath);
-    documentRepo.deleteDocument(req.user.id, req.params.id);
+    await documentRepo.deleteDocument(req.user.id, req.params.id);
     res.json({ message: 'Documento eliminado' });
   } catch (err) {
     next(err);

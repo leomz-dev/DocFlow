@@ -1,18 +1,16 @@
 const authService = require('../services/auth.service');
 
-async function login(req, res, next) {
+async function googleLogin(req, res, next) {
   try {
-    const { email, password } = req.body;
-    const result = await authService.login(email, password);
+    const { credential } = req.body;
+    if (!credential) {
+      return res.status(400).json({ error: 'Credencial de Google requerida' });
+    }
+    const result = await authService.loginWithGoogle(credential);
     res.json(result);
   } catch (err) {
     next(err);
   }
 }
 
-// Placeholder for refresh token logic (Phase 2: Redis store)
-async function refresh(req, res) {
-  res.status(501).json({ error: 'Refresh token not implemented in Phase 1' });
-}
-
-module.exports = { login, refresh };
+module.exports = { googleLogin };
