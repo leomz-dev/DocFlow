@@ -13,7 +13,7 @@ const { DOC_PREFIXES, DOC_COUNTER_KEYS } = require('../../config/constants');
  * @returns {object} docData ready for the PDF template
  */
 async function buildDocumentData(userId, body) {
-  const { type, client, items = [], notes = '', date, clauses = [] } = body;
+  const { type, client, items = [], notes = '', date, clauses = [], withRetention, withIVA, retentionRate } = body;
 
   const user = await userRepo.findById(userId);
   if (!user) throw Object.assign(new Error('Usuario no encontrado'), { status: 404 });
@@ -28,11 +28,12 @@ async function buildDocumentData(userId, body) {
 
   // Calculate totals
   const subtotal  = items.reduce((sum, i) => sum + (i.quantity * i.unitPrice), 0);
-  const ivaRate   = user.company?.taxConfig?.ivaRate ?? 19;
-  const retRate   = user.company?.taxConfig?.retencionRate ?? 0;
-  const ivaAmount = type === 'cuenta-cobro' ? 0 : subtotal * (ivaRate / 100);
-  const retAmount = type === 'cuenta-cobro' ? 0 : subtotal * (retRate / 100);
-  const total     = subtotal + ivaAmount - retAmount;
+  const ivaRate   = 19;
+  const retRate   = retentionRate ?? 3.5;
+  
+  const ivaAmount = withIVA ? subtotal * (ivaRate / 100) : 0;
+  const retAmount = withRetention ? subtotal * (retRate / 100) : 0;
+  const total     = subtotal + ivaAmount + retAmount;
 
   return {
     // Company

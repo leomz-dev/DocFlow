@@ -85,16 +85,16 @@
         <span>Subtotal</span>
         <span>{{formatCOP subtotal}}</span>
       </div>
-      {{#if (gt ivaAmount 0)}}
-      <div class="row">
-        <span>IVA ({{ivaRate}}%)</span>
-        <span>{{formatCOP ivaAmount}}</span>
-      </div>
-      {{/if}}
       {{#if (gt retAmount 0)}}
       <div class="row">
-        <span>Ret. en la fuente ({{retRate}}%)</span>
-        <span>- {{formatCOP retAmount}}</span>
+        <span>RETENCIÓN EN LA FUENTE ({{retRate}}%)</span>
+        <span>+ {{formatCOP retAmount}}</span>
+      </div>
+      {{/if}}
+      {{#if (gt ivaAmount 0)}}
+      <div class="row">
+        <span>IVA (19%)</span>
+        <span>+ {{formatCOP ivaAmount}}</span>
       </div>
       {{/if}}
       <div class="row total">

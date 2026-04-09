@@ -22,6 +22,7 @@ const NAV_ITEMS = [
   { to: '/history',   icon: History,         label: 'Historial' },
   { to: '/clients',   icon: Users,           label: 'Clientes' },
   { to: '/settings',  icon: Settings,        label: 'Configuración' },
+  { to: '/help',      icon: HelpCircle,      label: 'Ayuda' },
 ]
 
 const DOC_TYPES = [
@@ -38,6 +39,7 @@ const PAGE_TITLES = {
   '/new/cotizacion':   'Nueva Cotización',
   '/new/contrato':     'Nuevo Contrato',
   '/settings':         'Configuración',
+  '/help':             'Documentación',
 }
 
 /* ─── Create Document Dropdown ───────────────────── */

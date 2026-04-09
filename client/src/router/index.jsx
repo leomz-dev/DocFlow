@@ -6,6 +6,7 @@ import HistoryPage from '@/pages/History'
 import ClientsPage from '@/pages/Clients'
 import NewDocumentPage from '@/pages/NewDocument'
 import SettingsPage from '@/pages/Settings'
+import HelpPage from '@/pages/Help'
 import { MainLayout } from '@/components/Layout/MainLayout'
 
 const router = createBrowserRouter([
@@ -27,6 +28,7 @@ const router = createBrowserRouter([
           { path: 'clients',   element: <ClientsPage /> },
           { path: 'new/:type', element: <NewDocumentPage /> },
           { path: 'settings',  element: <SettingsPage /> },
+          { path: 'help',      element: <HelpPage /> },
         ]
       }
     ],

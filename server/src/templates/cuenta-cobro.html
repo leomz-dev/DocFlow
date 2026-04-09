@@ -83,6 +83,22 @@
     <!-- TOTALS -->
     <div class="totals">
       <div class="totals-table">
+        <div class="row">
+          <span>SUBTOTAL</span>
+          <span>{{formatCOP subtotal}}</span>
+        </div>
+        {{#if (gt retAmount 0)}}
+        <div class="row">
+          <span>RETENCIÓN EN LA FUENTE ({{retRate}}%)</span>
+          <span>+{{formatCOP retAmount}}</span>
+        </div>
+        {{/if}}
+        {{#if (gt ivaAmount 0)}}
+        <div class="row">
+          <span>IVA (19%)</span>
+          <span>+{{formatCOP ivaAmount}}</span>
+        </div>
+        {{/if}}
         <div class="row total">
           <span>TOTAL A COBRAR</span>
           <span>{{formatCOP total}}</span>

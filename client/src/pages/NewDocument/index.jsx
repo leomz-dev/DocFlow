@@ -61,6 +61,9 @@ const schema = z.object({
   clauses: z.array(clauseSchema).optional(),
   notes: z.string().optional(),
   date: z.string().optional(),
+  withRetention: z.boolean().optional(),
+  retentionRate: z.number({ coerce: true }).min(0).max(100).optional(),
+  withIVA: z.boolean().optional(),
 })
 
 /* ── UI Components ───────────────────────────────────── */
@@ -196,12 +199,22 @@ export default function NewDocumentPage() {
       clauses: isContract ? DEFAULT_CLAUSES : [],
       notes: '',
       date: new Date().toISOString().split('T')[0],
+      withRetention: false,
+      retentionRate: 3.5,
+      withIVA: false,
     }
   })
 
   const { fields, append, remove } = useFieldArray({ control, name: 'items' })
   const itemsWatch = watch('items')
+  const withRetention = watch('withRetention')
+  const retentionRate = watch('retentionRate') || 0
+  const withIVA = watch('withIVA')
+
   const subtotal = itemsWatch.reduce((acc, obj) => acc + ((+obj.quantity || 0) * (+obj.unitPrice || 0)), 0)
+  const retentionAmount = withRetention ? subtotal * (retentionRate / 100) : 0
+  const ivaAmount = withIVA ? subtotal * 0.19 : 0
+  const totalFinal = subtotal + retentionAmount + ivaAmount
 
   if (!VALID_TYPES.includes(type)) return <Navigate to="/dashboard" replace />
 
@@ -432,11 +445,52 @@ export default function NewDocumentPage() {
           <div className="lg:col-span-5 bg-surface-container-low rounded-[1.5rem] p-8 shadow-none border border-outline-variant/10">
             <h2 className="text-xl font-semibold text-on-surface font-sans mb-8">Resumen Financiero</h2>
             <div className="space-y-4 font-sans">
+              <div className="flex justify-between text-sm">
+                <span className="text-on-surface-variant">Subtotal</span>
+                <span className="font-bold text-on-surface">${subtotal.toLocaleString('es-CO')}</span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <label className="flex items-center gap-2 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      {...register('withRetention')}
+                      className="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary/20 cursor-pointer"
+                    />
+                    <span className="text-sm text-on-surface-variant group-hover:text-on-surface transition-colors">Retención fuente</span>
+                  </label>
+                  {withRetention && (
+                    <div className="flex items-center gap-1 bg-surface-container-high rounded-lg px-2 py-1 border border-outline-variant/20 animate-in fade-in slide-in-from-left-2 duration-200">
+                      <input
+                        type="number"
+                        step="0.1"
+                        {...register('retentionRate')}
+                        className="w-12 bg-transparent border-none p-0 text-xs font-bold text-primary focus:ring-0 outline-none text-center"
+                      />
+                      <span className="text-xs font-bold text-primary/60">%</span>
+                    </div>
+                  )}
+                </div>
+                {withRetention && <span className="text-sm font-bold text-primary">+ ${retentionAmount.toLocaleString('es-CO')}</span>}
+              </div>
+
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    {...register('withIVA')}
+                    className="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary/20 cursor-pointer"
+                  />
+                  <span className="text-sm text-on-surface-variant group-hover:text-on-surface transition-colors">IVA (19%)</span>
+                </label>
+                {withIVA && <span className="text-sm font-bold text-primary">+ ${ivaAmount.toLocaleString('es-CO')}</span>}
+              </div>
 
               <div className="pt-4 border-t border-outline-variant/20 flex justify-between items-end">
                 <div>
                   <span className="block text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Total Final</span>
-                  <span className="text-[32px] font-bold text-primary leading-tight tracking-tighter">${subtotal.toLocaleString('es-CO')}</span>
+                  <span className="text-[32px] font-bold text-primary leading-tight tracking-tighter">${totalFinal.toLocaleString('es-CO')}</span>
                 </div>
                 <span className="text-[10px] font-bold text-primary bg-primary/10 px-3 py-1 rounded-lg mb-2">COP</span>
               </div>
