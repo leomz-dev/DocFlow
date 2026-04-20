@@ -11,7 +11,7 @@ for (const key of required) {
 }
 
 module.exports = {
-  PORT: parseInt(process.env.PORT, 10) || 3001,
+  PORT: parseInt(process.env.PORT, 10) || 8080,
   NODE_ENV: process.env.NODE_ENV || 'development',
   JWT_SECRET: process.env.JWT_SECRET,
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '8h',

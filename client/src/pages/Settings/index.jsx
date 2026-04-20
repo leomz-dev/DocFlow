@@ -5,7 +5,7 @@ import {
   Settings, User, Building2, Upload,
   CheckCircle, AlertCircle, Phone, Mail,
   MapPin, Image, PenLine, FileText, ExternalLink,
-  Check
+  Check, CreditCard
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -145,7 +145,7 @@ function SectionHeader({ icon: Icon, title, description }) {
 /* ─── Main Page ───────────────────────────────────── */
 export default function SettingsPage() {
   const { user, company, updateUserInContext } = useAuth()
-  const BASE_URL = 'http://localhost:3001'
+  const BASE_URL = import.meta.env.VITE_API_URL || ''
 
   /* ── Account info ── */
   const [name, setName] = useState(user?.name ?? '')
@@ -166,6 +166,10 @@ export default function SettingsPage() {
     tagline:    company?.tagline    ?? '',
     legalRep:   company?.legalRep   ?? '',
     legalRepId: company?.legalRepId ?? '',
+    bankName:        company?.bankName        ?? '',
+    bankAccountType: company?.bankAccountType ?? '',
+    bankAccountNum:  company?.bankAccountNum  ?? '',
+    bankHolder:      company?.bankHolder      ?? '',
   })
   const [companyStatus, setCompanyStatus] = useState({ type: null, message: '' })
   const [companyLoading, setCompanyLoading] = useState(false)
@@ -478,6 +482,42 @@ export default function SettingsPage() {
                     value={companyForm.legalRepId}
                     onChange={handleCompanyField('legalRepId')}
                     placeholder="1.000.000.000"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <h3 className="text-sm font-bold text-on-surface flex items-center gap-2 font-sans border-b border-outline-variant/10 pb-3 mb-2">
+                  <CreditCard size={18} className="text-primary" /> Información Bancaria
+                </h3>
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  <SettingsInput
+                    id="c-bankName"
+                    label="Nombre del Banco"
+                    value={companyForm.bankName}
+                    onChange={handleCompanyField('bankName')}
+                    placeholder="Ej: Bancolombia, Davivienda..."
+                  />
+                  <SettingsInput
+                    id="c-bankType"
+                    label="Tipo de Cuenta"
+                    value={companyForm.bankAccountType}
+                    onChange={handleCompanyField('bankAccountType')}
+                    placeholder="Ahorros / Corriente"
+                  />
+                  <SettingsInput
+                    id="c-bankNum"
+                    label="Número de Cuenta"
+                    value={companyForm.bankAccountNum}
+                    onChange={handleCompanyField('bankAccountNum')}
+                    placeholder="000-000000-00"
+                  />
+                  <SettingsInput
+                    id="c-bankHolder"
+                    label="Titular de la Cuenta"
+                    value={companyForm.bankHolder}
+                    onChange={handleCompanyField('bankHolder')}
+                    placeholder="Nombre completo o Razón Social"
                   />
                 </div>
               </div>

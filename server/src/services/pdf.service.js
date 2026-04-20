@@ -1,7 +1,7 @@
 const path       = require('path');
 const fs         = require('fs/promises');
 const Handlebars = require('handlebars');
-const puppeteer  = require('puppeteer');
+const { getBrowser } = require('./browser.pool');
 const storage    = require('../storage/local.storage');
 const documentRepo = require('../repositories/document.repository');
 const { formatCOP } = require('../utils/formatCurrency');
@@ -17,6 +17,32 @@ Handlebars.registerHelper('gt', (a, b) => a > b);
 Handlebars.registerHelper('eq', (a, b) => a === b);
 
 const TEMPLATES_DIR = path.resolve(__dirname, '../templates');
+
+// Cache de plantillas compiladas — se leen una sola vez del disco
+const _templateCache = new Map();
+
+/**
+ * Devuelve la plantilla Handlebars compilada, con cache en memoria.
+ */
+async function getTemplate(docType) {
+  if (_templateCache.has(docType)) return _templateCache.get(docType);
+
+  const templatePath = path.join(TEMPLATES_DIR, `${docType}.html`);
+  const templateSrc  = await fs.readFile(templatePath, 'utf-8');
+  const compiled     = Handlebars.compile(templateSrc);
+  _templateCache.set(docType, compiled);
+  return compiled;
+}
+
+// Cache del CSS base
+let _baseCssCache = null;
+
+async function getBaseCss() {
+  if (_baseCssCache) return _baseCssCache;
+  const baseCssPath = path.join(TEMPLATES_DIR, 'styles', 'base.css');
+  _baseCssCache = await fs.readFile(baseCssPath, 'utf-8');
+  return _baseCssCache;
+}
 
 /**
  * Reads an image stored in BASE_UPLOAD_PATH and returns a base64 data URI.
@@ -48,6 +74,7 @@ async function getBase64Image(relativePath) {
 
 /**
  * Generates a PDF buffer from the given doc type and data.
+ * Usa un browser pool reutilizable para máxima velocidad.
  * @param {string} docType  cuenta-cobro | cotizacion | contrato
  * @param {object} data     output of documents.service.buildDocumentData()
  * @returns {Promise<Buffer>}
@@ -55,36 +82,36 @@ async function getBase64Image(relativePath) {
 async function generate(docType, data) {
   if (data.company) {
     data.company = { ...data.company };
-    if (data.company.logoPath) {
-      data.company.logoPath = await getBase64Image(data.company.logoPath);
-    }
-    if (data.company.signPath) {
-      data.company.signPath = await getBase64Image(data.company.signPath);
-    }
+    // Cargar imágenes en paralelo
+    const [logoB64, signB64] = await Promise.all([
+      data.company.logoPath ? getBase64Image(data.company.logoPath) : null,
+      data.company.signPath ? getBase64Image(data.company.signPath) : null,
+    ]);
+    data.company.logoPath = logoB64;
+    data.company.signPath = signB64;
   }
 
-  // Load template HTML
-  const templatePath = path.join(TEMPLATES_DIR, `${docType}.html`);
-  const templateSrc  = await fs.readFile(templatePath, 'utf-8');
+  // Cargar template y CSS en paralelo (con cache)
+  const [template, baseCss] = await Promise.all([
+    getTemplate(docType),
+    getBaseCss(),
+  ]);
 
-  // Load base CSS and embed it into the template data
-  const baseCssPath = path.join(TEMPLATES_DIR, 'styles', 'base.css');
-  const baseCss     = await fs.readFile(baseCssPath, 'utf-8');
-
-  // Compile Handlebars template
-  const template = Handlebars.compile(templateSrc);
   const baseCssTag = `<style>\n${baseCss}\n</style>`;
-  const html     = template({ ...data, baseCssTag });
+  const html = template({ ...data, baseCssTag });
 
-  // Launch Puppeteer and generate PDF
-  const browser = await puppeteer.launch({
-    headless: 'new',
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
-  });
+  // Usar el browser pool en vez de launch/close cada vez
+  const browser = await getBrowser();
+  const page    = await browser.newPage();
 
   try {
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle0' });
+    // Viewport fijo para consistencia en el layout del PDF
+    await page.setViewport({ width: 816, height: 1056 });
+
+    // 'domcontentloaded' es suficiente porque las plantillas son self-contained
+    // (imágenes ya están inline como base64)
+    await page.setContent(html, { waitUntil: 'domcontentloaded' });
+
     const buffer = await page.pdf({
       format: 'Letter',
       printBackground: true,
@@ -92,7 +119,7 @@ async function generate(docType, data) {
     });
     return buffer;
   } finally {
-    await browser.close();
+    await page.close(); // Solo cierra la pestaña, no el browser completo
   }
 }
 
