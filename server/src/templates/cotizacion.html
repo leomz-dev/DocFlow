@@ -103,6 +103,19 @@
       </div>
     </div>
   </div>
+  
+  <!-- BANK INFO -->
+  {{#if company.bankName}}
+  <div class="bank-info">
+    <h3>Datos para pago</h3>
+    <p>
+      <strong>Banco:</strong> {{company.bankName}} &nbsp;|&nbsp;
+      <strong>Tipo:</strong> {{company.bankAccountType}} &nbsp;|&nbsp;
+      <strong>No. Cuenta:</strong> {{company.bankAccountNum}} &nbsp;|&nbsp;
+      <strong>Titular:</strong> {{company.bankHolder}}
+    </p>
+  </div>
+  {{/if}}
 
   {{#if notes}}
   <div class="notes">

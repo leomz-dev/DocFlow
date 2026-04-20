@@ -116,6 +116,17 @@
     </div>
   </div>
 
+  <!-- BANK INFO -->
+  {{#if company.bankName}}
+  <div class="bank-info" style="margin-top:20px; font-size: 9.5pt;">
+    <h4 style="text-transform: uppercase; font-weight: 700; color: #4f46e5; margin-bottom: 4px;">Información Bancaria para Pagos</h4>
+    <p>
+      El pago deberá realizarse a favor de <strong>{{company.bankHolder}}</strong> en el banco <strong>{{company.bankName}}</strong>, 
+      cuenta tipo <strong>{{company.bankAccountType}}</strong> número <strong>{{company.bankAccountNum}}</strong>.
+    </p>
+  </div>
+  {{/if}}
+
   <!-- SIGNATURES -->
   <div class="signature-block">
     <div class="sig-item">
