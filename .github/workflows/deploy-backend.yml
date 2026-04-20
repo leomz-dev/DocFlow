@@ -1,13 +1,12 @@
 # ── Deploy DocFlow Backend → Azure App Service (Docker) ─────────────────
-# Se ejecuta en cada push a main. Construye la imagen Docker del backend
-# y la despliega en Azure App Service usando Container Registry.
+# Se ejecuta en cada push a main o manualmente. 
 #
 # Requiere los siguientes secrets en GitHub:
-#   AZURE_CREDENTIALS          → JSON de un Service Principal con acceso al ACR y App Service
-#   REGISTRY_LOGIN_SERVER      → Ej: docflowreg.azurecr.io
-#   REGISTRY_USERNAME          → Username del ACR
-#   REGISTRY_PASSWORD          → Password del ACR
-#   AZURE_WEBAPP_NAME          → Nombre del App Service (ej: docflow-api)
+#   AZURE_REGISTRY_LOGIN_SERVER → Ej: docflowreg.azurecr.io
+#   AZURE_REGISTRY_USERNAME     → Username del ACR
+#   AZURE_REGISTRY_PASSWORD     → Password del ACR
+#   AZURE_WEBAPP_NAME           → Nombre del App Service (ej: docflow-api)
+#   AZURE_WEBAPP_PUBLISH_PROFILE → Contenido del archivo .PublishSettings
 
 name: Deploy Backend
 
@@ -31,17 +30,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
       - name: Login to Azure Container Registry
         uses: docker/login-action@v3
         with:
-          registry: ${{ secrets.REGISTRY_LOGIN_SERVER }}
-          username: ${{ secrets.REGISTRY_USERNAME }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
+          registry: ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}
+          username: ${{ secrets.AZURE_REGISTRY_USERNAME }}
+          password: ${{ secrets.AZURE_REGISTRY_PASSWORD }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
@@ -49,11 +43,13 @@ jobs:
           context: ./server
           push: true
           tags: |
-            ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-            ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest
+            ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest
 
       - name: Deploy to Azure App Service
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
-          images: ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          images: ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
