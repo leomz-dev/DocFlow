@@ -35,25 +35,31 @@ async function getBrowser() {
   // Evitar launches concurrentes
   if (_launching) return _launching;
 
-  _launching = puppeteer.launch({
-    headless: true,
-    args: LAUNCH_ARGS,
-    protocolTimeout: 30_000,
-    // En Docker, usa el Chromium del sistema via la variable de entorno
-    ...(process.env.PUPPETEER_EXECUTABLE_PATH && {
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
-    }),
-  });
+  try {
+    _launching = puppeteer.launch({
+      headless: 'new',
+      args: LAUNCH_ARGS,
+      protocolTimeout: 30_000,
+      // En Docker, usa el Chromium del sistema via la variable de entorno
+      ...(process.env.PUPPETEER_EXECUTABLE_PATH && {
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
+      }),
+    });
 
-  _browser = await _launching;
-  _launching = null;
+    _browser = await _launching;
+    _launching = null;
 
-  // Si se desconecta, limpiar la referencia
-  _browser.on('disconnected', () => {
-    _browser = null;
-  });
+    // Si se desconecta, limpiar la referencia
+    _browser.on('disconnected', () => {
+      _browser = null;
+    });
 
-  return _browser;
+    return _browser;
+  } catch (err) {
+    _launching = null;
+    console.error('❌ Puppeteer failed to launch:', err.message);
+    throw new Error('PDF generation is unavailable: ' + err.message);
+  }
 }
 
 /**

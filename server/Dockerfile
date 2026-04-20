@@ -49,7 +49,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Indicar a Puppeteer que use el Chromium del sistema (no descargue otro)
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium \
-    NODE_ENV=production
+    NODE_ENV=production \
+    WEBSITES_PORT=8080
 
 WORKDIR /app
 
