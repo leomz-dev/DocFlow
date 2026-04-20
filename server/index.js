@@ -14,8 +14,15 @@ const prisma = require('./src/config/prisma');
 const app = express();
 
 // ── Seguridad y parseo ──────────────────────────────────────────────
-app.use(helmet({ contentSecurityPolicy: false })); // CSP desactivado para servir PDFs
-app.use(cors({ origin: CLIENT_URL, credentials: true }));
+app.use(helmet({ 
+  contentSecurityPolicy: false,
+  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" } // Permite popups de Google OAuth
+})); 
+app.use(cors({ 
+  origin: CLIENT_URL || '*', 
+  credentials: true 
+}));
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
