@@ -13,6 +13,24 @@ const prisma = require('./src/config/prisma');
 
 const app = express();
 
+const explicitAllowedOrigins = (CLIENT_URL || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true; // server-to-server, curl, health checks, etc.
+  if (explicitAllowedOrigins.includes(origin)) return true;
+
+  // Accept Azure Static Web Apps preview/production domains in production.
+  try {
+    const { hostname } = new URL(origin);
+    return hostname.endsWith('.azurestaticapps.net');
+  } catch {
+    return false;
+  }
+};
+
 // ── Seguridad y parseo ──────────────────────────────────────────────
 app.use(helmet({ 
   contentSecurityPolicy: false,
@@ -20,7 +38,10 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,                      // Evita conflictos con recursos cross-origin
 })); 
 app.use(cors({ 
-  origin: CLIENT_URL ? CLIENT_URL.split(',').map(o => o.trim()) : '*', 
+  origin: (origin, callback) => {
+    if (isAllowedOrigin(origin)) return callback(null, true);
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],

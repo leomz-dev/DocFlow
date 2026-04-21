@@ -7,7 +7,9 @@
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY",
     "Referrer-Policy": "strict-origin-when-cross-origin",
-    "Cache-Control": "public, max-age=3600"
+    "Cache-Control": "public, max-age=3600",
+    "Cross-Origin-Opener-Policy": "unsafe-none",
+    "Cross-Origin-Embedder-Policy": "unsafe-none"
   },
   "mimeTypes": {
     ".json": "application/json",
