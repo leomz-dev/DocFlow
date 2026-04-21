@@ -16,11 +16,14 @@ const app = express();
 // ── Seguridad y parseo ──────────────────────────────────────────────
 app.use(helmet({ 
   contentSecurityPolicy: false,
-  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" } // Permite popups de Google OAuth
+  crossOriginOpenerPolicy: { policy: "unsafe-none" },   // Permite popups y postMessage de Google OAuth
+  crossOriginEmbedderPolicy: false,                      // Evita conflictos con recursos cross-origin
 })); 
 app.use(cors({ 
   origin: CLIENT_URL ? CLIENT_URL.split(',').map(o => o.trim()) : '*', 
-  credentials: true 
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
 app.use(express.json({ limit: '10mb' }));

@@ -106,7 +106,7 @@ export default function LoginPage() {
                   onError={handleGoogleError}
                   theme="filled_blue"
                   shape="pill"
-                  width="100%"
+                  width={320}
                   size="large"
                   text="signin_with"
                 />
