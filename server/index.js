@@ -57,25 +57,29 @@ app.use('/api/users',     usersRoutes);
 app.use('/api/documents', documentsRoutes);
 app.use('/api/clients',   clientsRoutes);
 
-// ── Health check ────────────────────────────────────────────────────
-app.get('/api/health', (_req, res) => res.json({ status: 'ok', ts: new Date() }));
-
 // ── Manejador global de errores (debe ser el último middleware) ──────
 app.use(errorMiddleware);
 
-async function startServer() {
+let dbConnected = false;
+
+async function connectDatabaseWithRetry() {
   try {
     await prisma.$connect();
+    dbConnected = true;
     console.log('🍃 PostgreSQL Connected via Prisma');
-    
-    app.listen(PORT, () => {
-      console.log(`🚀 DocFlow server running on http://localhost:${PORT}`);
-    });
   } catch (err) {
+    dbConnected = false;
     console.error('❌ Failed to connect to database:', err.message);
-    process.exit(1);
+    setTimeout(connectDatabaseWithRetry, 10000);
   }
 }
 
-startServer();
+app.get('/api/health', (_req, res) =>
+  res.json({ status: 'ok', db: dbConnected ? 'up' : 'down', ts: new Date() })
+);
+
+app.listen(PORT, () => {
+  console.log(`🚀 DocFlow server running on http://localhost:${PORT}`);
+  connectDatabaseWithRetry();
+});
 
