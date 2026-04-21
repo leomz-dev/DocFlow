@@ -10,19 +10,22 @@ const puppeteer = require('puppeteer');
 let _browser = null;
 let _launching = null;
 
+const IS_WINDOWS = process.platform === 'win32';
+
 const LAUNCH_ARGS = [
   '--no-sandbox',
   '--disable-setuid-sandbox',
-  '--disable-dev-shm-usage',      // Evita crashes por /dev/shm pequeño en Docker
-  '--disable-gpu',                 // No necesitamos GPU para PDFs
+  '--disable-dev-shm-usage',        // Evita crashes por /dev/shm pequeño en Docker
+  '--disable-gpu',                   // No necesitamos GPU para PDFs
   '--disable-extensions',
   '--disable-background-networking',
   '--disable-default-apps',
   '--disable-sync',
   '--disable-translate',
   '--no-first-run',
-  '--single-process',              // Menos procesos hijos = menos RAM
-  '--font-render-hinting=none',    // Más rápido sin hinting
+  '--font-render-hinting=none',      // Más rápido sin hinting
+  // NOTA: --single-process NO se usa en Windows (causa crashes del protocolo CDP)
+  ...(!IS_WINDOWS ? ['--single-process'] : []),
 ];
 
 /**

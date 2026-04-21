@@ -1,0 +1,549 @@
+================================================================================
+  DOCFLOW — CONTEXTO COMPLETO DEL PROYECTO
+  Generado: 2026-04-20
+================================================================================
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. DESCRIPCIÓN GENERAL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+DocFlow es una aplicación web SaaS para generación automatizada de documentos
+PDF (cuentas de cobro, cotizaciones y contratos) orientada a freelancers y
+pequeñas empresas colombianas.
+
+Los usuarios se autentican con Google OAuth, configuran su empresa, gestionan
+clientes y generan PDFs profesionales a partir de plantillas Handlebars
+renderizadas con Puppeteer.
+
+Repositorio: c:\Users\Leonardo Meza\Documents\Dev\docs generator
+GitHub:      (vinculado al repo del usuario, rama principal: main)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2. ARQUITECTURA GENERAL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Monorepo dividido en dos carpetas:
+
+  /client   →  React 19 + Vite 8 + TailwindCSS 3 (SPA)
+  /server   →  Node.js/Express + Prisma ORM + PostgreSQL
+
+Comunicación: REST API (JSON). El cliente usa Axios con VITE_API_URL como base.
+
+Infraestructura Azure (en proceso de finalización):
+  - Azure Container Registry (ACR): aloja la imagen Docker del backend
+  - Azure App Service:             corre el contenedor del backend (puerto 8080)
+  - Azure Static Web Apps:         sirve el frontend (build de Vite)
+  - Azure Database for PostgreSQL: base de datos de producción
+
+CI/CD:
+  - .github/workflows/deploy-backend.yml  → build Docker + push ACR + deploy App Service
+  - Secrets requeridos en GitHub:
+      AZURE_REGISTRY_LOGIN_SERVER
+      AZURE_REGISTRY_USERNAME
+      AZURE_REGISTRY_PASSWORD
+      AZURE_WEBAPP_NAME
+      AZURE_WEBAPP_PUBLISH_PROFILE
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3. ESTRUCTURA DE ARCHIVOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+docs generator/
+├── .env                          ← Variables de entorno LOCALES (no en git)
+├── .gitignore
+├── README.md
+├── diagnostics.json              ← Diagnóstico de conectividad Azure (no relevante en prod)
+│
+├── .github/
+│   └── workflows/
+│       └── deploy-backend.yml    ← Pipeline CI/CD backend → Azure
+│
+├── client/                       ── FRONTEND ──────────────────────────────────
+│   ├── index.html
+│   ├── vite.config.js
+│   ├── tailwind.config.js
+│   ├── staticwebapp.config.json  ← Config Azure Static Web Apps (rutas SPA)
+│   ├── package.json
+│   └── src/
+│       ├── main.jsx              ← Entry point (monta AuthProvider + AppRouter)
+│       ├── App.jsx               ← Wrapper mínimo
+│       ├── index.css             ← Variables CSS globales (design system)
+│       ├── router/
+│       │   ├── index.jsx         ← Definición de rutas (react-router-dom v7)
+│       │   └── PrivateRoute.jsx  ← Guard de autenticación
+│       ├── context/
+│       │   └── AuthContext.jsx   ← Estado global de autenticación
+│       ├── hooks/
+│       │   └── useAuth.js        ← Hook consumidor del AuthContext
+│       ├── api/                  ← Módulos Axios por dominio
+│       │   ├── auth.api.js
+│       │   ├── users.api.js
+│       │   ├── documents.api.js
+│       │   └── clients.api.js
+│       ├── lib/
+│       │   └── utils.js          ← cn() helper (clsx + tailwind-merge)
+│       ├── pages/
+│       │   ├── Login/            ← Página de login con Google One Tap
+│       │   ├── Dashboard/        ← Resumen de actividad del usuario
+│       │   ├── NewDocument/      ← Formulario de generación de documentos
+│       │   ├── History/          ← Historial de documentos generados
+│       │   ├── Clients/          ← CRUD de clientes guardados
+│       │   ├── Settings/         ← Perfil de usuario y empresa
+│       │   └── Help/             ← Página de ayuda
+│       ├── components/
+│       │   ├── Layout/
+│       │   │   └── MainLayout.jsx ← Sidebar + contenido principal
+│       │   ├── PDFPreview/        ← Componente de previsualización PDF
+│       │   ├── ClientManager.jsx  ← CRUD inline de clientes
+│       │   └── ui/                ← Componentes Radix UI / shadcn-style
+│       └── assets/
+│
+└── server/                       ── BACKEND ───────────────────────────────────
+    ├── index.js                  ← Entry point Express
+    ├── Dockerfile                ← Multi-stage build (node:20-slim + chromium)
+    ├── .dockerignore
+    ├── nodemon.json
+    ├── package.json
+    ├── prisma.config.ts
+    ├── config/
+    │   ├── env.js                ← Carga y valida variables de entorno
+    │   └── constants.js          ← Constantes de negocio (prefijos, tipos de doc)
+    ├── prisma/
+    │   ├── schema.prisma         ← Modelos de base de datos
+    │   └── migrations/           ← Historial de migraciones SQL
+    ├── data/
+    │   └── uploads/              ← Archivos subidos (logos, firmas, PDFs)
+    └── src/
+        ├── config/
+        │   └── prisma.js         ← Singleton de PrismaClient
+        ├── controllers/
+        │   ├── auth.controller.js
+        │   ├── users.controller.js
+        │   ├── documents.controller.js
+        │   └── client.controller.js
+        ├── routes/
+        │   ├── auth.routes.js
+        │   ├── users.routes.js
+        │   ├── documents.routes.js
+        │   └── clients.routes.js
+        ├── services/
+        │   ├── auth.service.js       ← Google OAuth + JWT
+        │   ├── users.service.js      ← CRUD usuario y empresa
+        │   ├── documents.service.js  ← Lógica de negocio de documentos
+        │   ├── pdf.service.js        ← Generación PDF con Puppeteer
+        │   ├── browser.pool.js       ← Singleton Puppeteer (reutiliza Chrome)
+        │   └── client.service.js
+        ├── repositories/
+        │   ├── user.repository.js
+        │   ├── document.repository.js
+        │   └── client.repository.js
+        ├── middlewares/
+        │   ├── auth.middleware.js    ← Verifica JWT Bearer
+        │   ├── error.middleware.js   ← Manejo global de errores
+        │   └── validate.middleware.js ← Validación Zod de request body
+        ├── storage/
+        │   └── local.storage.js     ← Lee/escribe archivos en data/uploads
+        ├── templates/
+        │   ├── cuenta-cobro.html    ← Plantillas Handlebars
+        │   ├── cotizacion.html
+        │   ├── contrato.html
+        │   └── styles/
+        │       └── base.css         ← CSS base inyectado en los PDFs
+        └── utils/
+            ├── formatCurrency.js
+            └── dateUtils.js
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+4. STACK TECNOLÓGICO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+FRONTEND (client/)
+  - React 19.x
+  - Vite 8.x
+  - React Router DOM v7
+  - TailwindCSS 3.x
+  - Radix UI (Avatar, Dialog, Dropdown, Label, Separator, Slot)
+  - @react-oauth/google  (Google One Tap / OAuth2)
+  - Axios
+  - React Hook Form + Zod (validación de formularios)
+  - lucide-react (iconos)
+  - clsx + tailwind-merge (cn())
+
+BACKEND (server/)
+  - Node.js 20.x (CommonJS)
+  - Express 4.x
+  - Prisma ORM 7.x  (con @prisma/adapter-pg)
+  - PostgreSQL (driver pg)
+  - Puppeteer 22.x  (generación PDF headless)
+  - Handlebars 4.x  (plantillas HTML → PDF)
+  - jsonwebtoken    (JWT, 8h expiración)
+  - google-auth-library (verificación Google ID Token)
+  - bcryptjs, multer, uuid, zod, helmet, cors, dotenv
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+5. BASE DE DATOS — ESQUEMA PRISMA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Proveedor: PostgreSQL
+
+Modelos:
+
+  User
+    id, name, email (unique), password (nullable), googleId (nullable, unique)
+    avatarUrl, role (default: "admin"), active (default: true)
+    createdAt, updatedAt
+    → tiene: Company (1:1), Counter (1:1), Template (1:1)
+    → tiene: Client[] (1:N), Document[] (1:N)
+
+  Company
+    id, name, nit, address, phone, email
+    city?, department?, country?, website?, tagline?
+    legalRep?, legalRepId?, logoPath?, signPath?
+    bankName?, bankAccountType?, bankAccountNum?, bankHolder?
+    ivaRate (default: 19.0), retencionRate (default: 3.5)
+    regimenTributario?
+    → userId (unique) → User
+
+  Template
+    id, cuentaCobro, cotizacion, contrato  (todos default: "default")
+    → userId (unique) → User
+
+  Counter
+    id, cuentaCobro (default: 0), cotizacion (default: 0), contrato (default: 0)
+    → userId (unique) → User
+
+  Client
+    id, name, nit, address, email, city, phone
+    createdAt, updatedAt
+    → userId → User
+
+  Document
+    id, type, number, title, filePath, clientName, total (Float)
+    createdAt
+    → userId → User
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+6. API ENDPOINTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Base URL local:   http://localhost:8080
+Base URL Azure:   https://<AZURE_WEBAPP_NAME>.azurewebsites.net
+
+AUTH
+  POST /api/auth/google          ← Body: { credential: <Google ID Token> }
+                                   Responde: { token, user }
+
+USERS (requieren Bearer JWT)
+  GET  /api/users/me             ← Perfil completo del usuario autenticado
+  PUT  /api/users/me             ← Actualiza nombre, email, datos de empresa
+  POST /api/users/me/logo        ← Sube logo (multipart/form-data, campo "logo")
+  POST /api/users/me/sign        ← Sube firma (multipart/form-data, campo "sign")
+
+DOCUMENTS (requieren Bearer JWT)
+  POST   /api/documents/generate    ← Genera y guarda un PDF
+    Body: {
+      type: "cuenta-cobro" | "cotizacion" | "contrato",
+      client: { name, nit?, address?, email?, phone?, city? },
+      items: [{ description, quantity, unitPrice }],
+      clauses?: [{ title, content }],   ← solo para contrato
+      notes?: string,
+      date?: string,
+      withIVA?: boolean,
+      withRetention?: boolean,
+      retentionRate?: number
+    }
+  GET    /api/documents/history      ← Lista historial del usuario
+  GET    /api/documents/:id/download ← Descarga el PDF (stream)
+  DELETE /api/documents/:id          ← Elimina registro y archivo
+
+CLIENTS (requieren Bearer JWT)
+  GET    /api/clients            ← Lista clientes del usuario
+  POST   /api/clients            ← Crea cliente
+  PUT    /api/clients/:id        ← Actualiza cliente
+  DELETE /api/clients/:id        ← Elimina cliente
+
+HEALTH
+  GET /api/health                ← { status: "ok", ts: <datetime> }  (sin auth)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+7. VARIABLES DE ENTORNO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+BACKEND (.env en raíz del proyecto, cargado desde server/config/env.js):
+
+  PORT=8080                          ← Puerto del servidor Express
+  NODE_ENV=production                ← "development" | "production"
+  JWT_SECRET=<string-secreto>        ← [REQUERIDO] Firma de tokens JWT
+  JWT_EXPIRES_IN=8h                  ← Duración del token (default: 8h)
+  DATABASE_URL=postgresql://...      ← Cadena de conexión PostgreSQL
+  CLIENT_URL=https://<static-wa>.azurestaticapps.net  ← Origen CORS permitido
+  GOOGLE_CLIENT_ID=<OAuth2 client>   ← Google Cloud Console OAuth 2.0 Client ID
+
+  Extras que Azure App Service inyecta en Docker:
+    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+    WEBSITES_PORT=8080
+
+FRONTEND (variables Vite, prefijo VITE_):
+
+  VITE_API_URL=https://<azure-app-service>.azurewebsites.net
+      ← URL base de la API. En dev, proxy de Vite puede estar configurado.
+  VITE_GOOGLE_CLIENT_ID=<mismo Google OAuth2 Client ID>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+8. FLUJO DE AUTENTICACIÓN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Usuario hace clic en "Iniciar sesión con Google" en LoginPage
+2. @react-oauth/google devuelve un Google ID Token (credential)
+3. Frontend → POST /api/auth/google con el credential
+4. Backend verifica el token con google-auth-library (verifyIdToken)
+5. Si el usuario no existe, se crea con counters y templates iniciales
+6. Backend firma un JWT (8h) y lo devuelve junto al objeto user
+7. Frontend almacena token y user en localStorage
+   (claves: "docflow_token", "docflow_user")
+8. AuthContext expone { user, company, isAuthenticated, loading, ... }
+9. PrivateRoute redirige a /login si !isAuthenticated
+10. Al montar, AuthContext re-fetch GET /api/users/me para sincronizar con server
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+9. FLUJO DE GENERACIÓN DE PDF
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Usuario completa el formulario en /new/:type (cuenta-cobro | cotizacion | contrato)
+2. Frontend → POST /api/documents/generate
+3. documents.service.buildDocumentData():
+   - Carga datos de empresa del usuario desde DB
+   - Incrementa el counter atómico del tipo de documento en DB
+   - Genera número de documento (ej. COT-0001)
+   - Calcula subtotal, IVA, retención y total
+4. pdf.service.generate():
+   - Convierte logo y firma a base64 (para inline en HTML)
+   - Carga plantilla Handlebars con cache (una sola lectura de disco)
+   - Renderiza HTML con Handlebars
+   - Usa browser.pool.getBrowser() → Puppeteer singleton (reutiliza Chrome)
+   - Genera PDF formato Letter, sin márgenes, printBackground: true
+5. pdf.service.saveAndRegister():
+   - Guarda el PDF en data/uploads/{userId}/docs/{numero}.pdf
+   - Registra el documento en la tabla Document de PostgreSQL
+6. Frontend recibe el documento guardado y puede descargarlo desde
+   GET /api/documents/:id/download
+
+Tipos de documento:
+  cuenta-cobro → prefijo CC  → contador: cuentaCobro
+  cotizacion   → prefijo COT → contador: cotizacion
+  contrato     → prefijo CTR → contador: contrato
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+10. DOCKER — CONFIGURACIÓN DEL CONTENEDOR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Multi-stage build en server/Dockerfile:
+
+  Stage 1 (builder): node:20-slim
+    - Instala openssl, ca-certificates
+    - npm ci --omit=dev
+    - npx prisma generate
+
+  Stage 2 (runtime): node:20-slim
+    - Instala Chromium del sistema (no descarga Puppeteer propio)
+    - Dependencias del sistema para Puppeteer en Linux:
+        chromium, fonts-liberation, fonts-noto-color-emoji, fonts-noto-cjk,
+        libatk-bridge2.0-0, libatk1.0-0, libcups2, libdrm2, libgbm1,
+        libnss3, libxcomposite1, libxdamage1, libxrandr2
+    - ENV: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+    - ENV: PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+    - ENV: WEBSITES_PORT=8080
+    - Corre como usuario no-root (node)
+    - EXPOSE 8080
+    - Health check: GET http://localhost:8080/api/health
+
+IMPORTANTE para Azure App Service:
+  - La variable WEBSITES_PORT=8080 debe estar configurada en la App Service
+  - DATABASE_URL debe configurarse como Application Setting (no en imagen)
+  - JWT_SECRET, GOOGLE_CLIENT_ID, CLIENT_URL también como Application Settings
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+11. AZURE STATIC WEB APPS — FRONTEND
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+El frontend se sirve desde Azure Static Web Apps.
+Configuración en client/staticwebapp.config.json:
+  - Redirige todas las rutas no-archivo a /index.html (SPA fallback)
+  - La variable VITE_API_URL debe apuntar al App Service del backend
+
+El build de producción se genera con:
+  cd client && npm run build
+  (output en client/dist/)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+12. ESTADO ACTUAL DEL DEPLOYMENT (al 2026-04-20)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Se estuvo trabajando en desplegar DocFlow a Azure. Los recursos de Azure
+fueron creados. El estado aproximado al momento de generar este contexto:
+
+COMPLETADO:
+  ✅ Azure Container Registry (ACR) configurado
+  ✅ Dockerfile multi-stage listo (Puppeteer + Chromium sistema)
+  ✅ Pipeline GitHub Actions (deploy-backend.yml) configurado
+  ✅ Imagen Docker construida y funcional localmente
+  ✅ Azure App Service creado
+  ✅ Secrets de GitHub configurados
+  ✅ Azure Static Web Apps configurado para el frontend
+  ✅ Health check endpoint (/api/health) implementado
+
+PENDIENTE / EN PROCESO:
+  ⚠️  Configurar Application Settings en App Service:
+        WEBSITES_PORT = 8080
+        DATABASE_URL  = postgresql://...  (Azure PostgreSQL connection string)
+        JWT_SECRET    = <valor secreto>
+        GOOGLE_CLIENT_ID = <OAuth2 client ID>
+        CLIENT_URL    = <URL del Static Web App>
+        NODE_ENV      = production
+
+  ⚠️  Configurar CORS en la App Service para el dominio del Static Web App
+  
+  ⚠️  Ejecutar migraciones de Prisma contra la base de datos de producción:
+        npx prisma migrate deploy
+        (desde el contexto del contenedor o con DATABASE_URL de producción)
+
+  ⚠️  Configurar VITE_API_URL en el build del frontend con la URL del App Service
+  
+  ⚠️  El COOP (Cross-Origin-Opener-Policy) header puede interferir con Google OAuth popup
+      → ya mitigado en código: helmet({ crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" } })
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+13. COMANDOS ÚTILES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+DESARROLLO LOCAL:
+  # Backend (puerto 8080)
+  cd server && npm run dev
+
+  # Frontend (puerto 5173)
+  cd client && npm run dev
+
+PRISMA:
+  # Crear nueva migración
+  cd server && npx prisma migrate dev --name <nombre>
+
+  # Aplicar migraciones en producción
+  cd server && npx prisma migrate deploy
+
+  # Abrir Prisma Studio
+  cd server && npx prisma studio
+
+  # Regenerar cliente (tras cambios en schema)
+  cd server && npx prisma generate
+
+DOCKER LOCAL:
+  # Build
+  docker build -t docflow-api ./server
+
+  # Run con variables de entorno
+  docker run -p 8080:8080 \
+    -e DATABASE_URL="postgresql://..." \
+    -e JWT_SECRET="tu-secret" \
+    -e GOOGLE_CLIENT_ID="..." \
+    -e CLIENT_URL="http://localhost:5173" \
+    -e NODE_ENV=production \
+    docflow-api
+
+FRONTEND BUILD:
+  cd client && npm run build
+  # Archivos generados en client/dist/
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+14. RUTAS DEL FRONTEND (React Router)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  /login          → LoginPage              (pública)
+  /               → Redirect → /dashboard  (privada)
+  /dashboard      → DashboardPage          (privada)
+  /history        → HistoryPage            (privada)
+  /clients        → ClientsPage            (privada)
+  /new/:type      → NewDocumentPage        (privada, :type = cuenta-cobro|cotizacion|contrato)
+  /settings       → SettingsPage           (privada)
+  /help           → HelpPage               (privada)
+
+Todas las rutas privadas pasan por PrivateRoute que verifica isAuthenticated del AuthContext.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+15. DESIGN SYSTEM (TailwindCSS)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+El proyecto usa un design system inspirado en Material Design 3 con variables
+CSS customizadas definidas en client/src/index.css y extendidas en
+client/tailwind.config.js.
+
+Paleta principal:
+  --primary, --on-primary, --primary-container, --on-primary-container
+  --secondary, --on-secondary, --secondary-container
+  --tertiary, --on-tertiary, --tertiary-container
+  --surface, --surface-container-lowest, --surface-container-low, --surface-container-high
+  --on-surface, --on-surface-variant
+  --outline-variant
+  --error, --error-container
+
+Tipografía: Inter (Google Fonts), clase font-sans
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+16. LÓGICA DE NEGOCIO CLAVE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CÁLCULO DE TOTALES (documents.service.js):
+  subtotal = sum(item.quantity * item.unitPrice)
+  ivaAmount    = withIVA ? subtotal * (19 / 100) : 0
+  retAmount    = withRetention ? subtotal * (retentionRate / 100) : 0
+                 (retentionRate default: 3.5 desde el body o desde company)
+  total = subtotal + ivaAmount + retAmount   ← Nota: retención normalmente RESTA,
+                                               revisar si la lógica es correcta
+                                               para el caso colombiano
+
+NUMERACIÓN AUTOMÁTICA:
+  Cada tipo de documento tiene un contador por usuario en la tabla Counter.
+  Se incrementa atómicamente en DB antes de generar el PDF.
+  Formato: {PREFIJO}-{número 4 dígitos con ceros}
+  Ejemplos: CC-0001, COT-0042, CTR-0003
+
+ALMACENAMIENTO DE ARCHIVOS:
+  Local (dev): server/data/uploads/{userId}/docs/{numero}.pdf
+  Producción:  El path relativo se guarda en Document.filePath
+  NOTA: En Azure App Service con contenedor, este almacenamiento es efímero
+  a menos que se monte un Azure File Share. Esto es un PENDIENTE CRÍTICO.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+17. PENDIENTES Y POSIBLES MEJORAS IDENTIFICADAS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CRÍTICOS para producción Azure:
+  1. Persistencia de archivos: el contenedor Docker en App Service pierde
+     data/uploads al reiniciarse. Solución: montar Azure File Share usando
+     la opción "Path mappings" en App Service, o migrar a Azure Blob Storage.
+
+  2. Migraciones de Prisma: ejecutar `npx prisma migrate deploy` contra
+     la BD de Azure PostgreSQL antes del primer uso.
+
+  3. Application Settings en App Service: configurar todas las variables
+     de entorno listadas en la sección 12.
+
+  4. CORS: asegurar que CLIENT_URL apunta exactamente al dominio del
+     Static Web App (sin trailing slash).
+
+  5. Google OAuth: el Google Cloud Console debe tener el dominio del
+     Static Web App en "Authorized JavaScript origins" y el backend
+     en "Authorized redirect URIs" si se usa flujo de redirección.
+
+MEJORAS FUTURAS identificadas:
+  - Migrar almacenamiento de PDFs a Azure Blob Storage (evitar efímero)
+  - Añadir refresh token (actualmente el JWT dura 8h)
+  - Rate limiting en endpoints de generación de PDF
+  - Múltiples plantillas de documentos (campo Template preparado en DB)
+  - Soporte multi-usuario / equipos (campo role preparado)
+  - Preview en tiempo real del PDF antes de generar
+  - Internacionalización (i18n) — actualmente solo español
+
+================================================================================
+  FIN DEL CONTEXTO — DocFlow
+================================================================================
