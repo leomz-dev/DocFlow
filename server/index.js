@@ -19,7 +19,7 @@ app.use(helmet({
   crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" } // Permite popups de Google OAuth
 })); 
 app.use(cors({ 
-  origin: CLIENT_URL ? CLIENT_URL.split(',').map(o => o.trim()) : ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173', 'https://white-flower-003ff7b0f.7.azurestaticapps.net'], 
+  origin: CLIENT_URL ? CLIENT_URL.split(',').map(o => o.trim()) : '*', 
   credentials: true 
 }));
 
