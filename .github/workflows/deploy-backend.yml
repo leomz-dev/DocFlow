@@ -5,7 +5,6 @@
 #   AZURE_REGISTRY_LOGIN_SERVER → Ej: docflowreg.azurecr.io
 #   AZURE_REGISTRY_USERNAME     → Username del ACR
 #   AZURE_REGISTRY_PASSWORD     → Password del ACR
-#   AZURE_WEBAPP_NAME           → Nombre del App Service (ej: docflow-api)
 #   AZURE_WEBAPP_PUBLISH_PROFILE → Contenido del archivo .PublishSettings
 
 name: Deploy Backend
@@ -19,6 +18,7 @@ on:
   workflow_dispatch:
 
 env:
+  AZURE_WEBAPP_NAME: docflow-api
   IMAGE_NAME: docflow-api
 
 jobs:
@@ -49,7 +49,7 @@ jobs:
       - name: Deploy to Azure App Service
         uses: azure/webapps-deploy@v3
         with:
-          app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           images: ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 

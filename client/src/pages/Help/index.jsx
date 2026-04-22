@@ -1,210 +1,206 @@
-import React from 'react'
 import {
-  BookOpen, Rocket, Settings, Users, FileText,
-  ShieldCheck, HelpCircle, ArrowRight, CheckCircle2,
-  Info, Sparkles, ChevronRight, Zap, Lightbulb
+  BookOpen, FileText, Users,
+  HelpCircle, ArrowRight,
+  Receipt, ScrollText, FileSignature, Building2
 } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
+import { useNavigate } from 'react-router-dom'
 
-const Section = ({ icon: Icon, title, children, colorClass = "bg-primary/10 text-primary" }) => (
-  <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-    <div className="flex items-center gap-4">
-      <div className={`p-3 rounded-2xl ${colorClass}`}>
-        <Icon size={24} />
-      </div>
-      <h3 className="text-2xl font-bold text-on-surface tracking-tight">{title}</h3>
-    </div>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {children}
-    </div>
-  </div>
-)
+const STEPS = [
+  {
+    step: 1,
+    icon: Building2,
+    title: 'Configure su empresa',
+    desc: 'Ingrese su nombre, NIT, dirección y datos bancarios. Esto hace que sus PDFs sean personalizados y con aspecto profesional.',
+    action: { label: 'Ir a Ajustes', path: '/settings' },
+    iconBg: '#FEF3C7', iconColor: '#D97706',
+  },
+  {
+    step: 2,
+    icon: FileText,
+    title: 'Cree su primer documento',
+    desc: 'Desde el Inicio, elija el tipo de documento. El proceso está dividido en 3 pasos sencillos: datos del cliente, servicios y totales.',
+    action: { label: 'Ir al Inicio', path: '/dashboard' },
+    iconBg: '#EEF3FE', iconColor: '#2563EB',
+  },
+  {
+    step: 3,
+    icon: Users,
+    title: 'Guarde sus clientes',
+    desc: 'Registre los datos de sus clientes frecuentes una sola vez. Podrá seleccionarlos en futuros documentos sin volver a escribirlos.',
+    action: { label: 'Ir a Clientes', path: '/clients' },
+    iconBg: '#F5F3FF', iconColor: '#7C3AED',
+  },
+]
 
-const HelpCard = ({ title, description, items = [], badge }) => (
-  <Card className="border-outline-variant/10 bg-surface-container-lowest hover:bg-surface-container-low transition-all duration-300 shadow-sm hover:shadow-md group overflow-hidden relative">
-    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-      <Sparkles size={48} />
-    </div>
-    <CardHeader className="pb-2">
-      <div className="flex justify-between items-start">
-        <CardTitle className="text-lg font-bold group-hover:text-primary transition-colors">{title}</CardTitle>
-        {badge && <Badge variant="secondary" className="bg-primary/5 text-primary text-[10px] uppercase tracking-wider">{badge}</Badge>}
-      </div>
-      <CardDescription className="text-sm leading-relaxed">{description}</CardDescription>
-    </CardHeader>
-    <CardContent>
-      <ul className="space-y-3 mt-2">
-        {items.map((item, i) => (
-          <li key={i} className="flex items-start gap-3 text-sm text-on-surface-variant/80">
-            <CheckCircle2 size={16} className="text-primary shrink-0 mt-0.5" />
-            <span>{item}</span>
-          </li>
-        ))}
-      </ul>
-    </CardContent>
-  </Card>
-)
+const DOC_TYPES = [
+  {
+    icon: Receipt,
+    name: 'Cuenta de Cobro',
+    desc: 'Para facturar servicios prestados. Muestra servicios, valor total y datos bancarios para el pago.',
+    iconBg: '#EEF3FE', iconColor: '#2563EB',
+  },
+  {
+    icon: ScrollText,
+    name: 'Cotización',
+    desc: 'Una propuesta de precios para un cliente. No es una obligación de pago, sino una oferta formal.',
+    iconBg: '#FEF3C7', iconColor: '#D97706',
+  },
+  {
+    icon: FileSignature,
+    name: 'Contrato',
+    desc: 'Documento legal para formalizar un acuerdo. Incluye cláusulas y espacio para firmas de ambas partes.',
+    iconBg: '#F5F3FF', iconColor: '#7C3AED',
+  },
+]
+
+const FAQS = [
+  {
+    q: '¿Puedo modificar un PDF ya generado?',
+    a: 'No. Una vez generado, el PDF es definitivo para garantizar su integridad. Si necesita cambios, cree un nuevo documento desde cero.',
+  },
+  {
+    q: '¿Mis datos están seguros?',
+    a: 'Sí. Sus datos se guardan en servidores seguros y el acceso está protegido por Google. Nadie más puede ver sus documentos.',
+  },
+  {
+    q: '¿Dónde están mis documentos anteriores?',
+    a: 'En la sección "Mis Documentos". Desde allí puede descargarlos nuevamente en cualquier momento.',
+  },
+  {
+    q: '¿Qué son IVA y Retención en la fuente?',
+    a: 'El IVA es el impuesto al valor agregado (19%). La Retención es un porcentaje que el cliente descuenta del pago. Ambos se pueden activar en la sección de totales del documento.',
+  },
+]
 
 export default function HelpPage() {
+  const navigate = useNavigate()
+
   return (
-    <div className="max-w-6xl mx-auto space-y-16 pb-20">
-      {/* Hero Section */}
-      <section className="text-center space-y-6 pt-10">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/5 border border-primary/10 text-primary text-xs font-bold uppercase tracking-widest animate-pulse">
-          <BookOpen size={14} /> Centro de Aprendizaje
+    <div className='fade-in space-y-8 pb-24'>
+
+      {/* ── Intro banner — navy inline (no class dependency) ── */}
+      <section
+        className='slide-up rounded-[12px] p-6'
+        style={{ background: '#0F2040' }}
+      >
+        <div className='flex items-start gap-4 mb-4'>
+          <div
+            className='w-10 h-10 flex items-center justify-center flex-shrink-0 rounded-[8px]'
+            style={{ background: 'rgba(255,255,255,0.12)' }}
+            aria-hidden='true'
+          >
+            <BookOpen size={20} className='text-white' />
+          </div>
+          <div>
+            <h2 className='text-[17px] font-bold text-white leading-tight'>¿Cómo usar DocFlow?</h2>
+            <p className='text-white/60 text-[13px] mt-0.5'>Guía paso a paso para comenzar</p>
+          </div>
         </div>
-        <h1 className="text-5xl md:text-6xl font-black text-on-surface tracking-tighter leading-none">
-          Domina <span className="text-primary italic">DocFlow</span>
-        </h1>
-        <p className="text-lg text-on-surface-variant max-w-2xl mx-auto leading-relaxed">
-          Bienvenido a la guía oficial de DocFlow. Aquí encontrarás todo lo que necesitas para profesionalizar tus documentos y optimizar la gestión de tus clientes.
+        <p className='text-white/75 text-[14px] leading-relaxed'>
+          DocFlow le permite crear documentos profesionales en PDF en pocos minutos,
+          sin necesidad de conocimientos técnicos. Siga los pasos a continuación.
         </p>
       </section>
 
-      <Separator className="bg-outline-variant/10" />
+      {/* ── Steps ── */}
+      <section className='slide-up delay-1' aria-labelledby='steps-heading'>
+        <h2 id='steps-heading' className='text-[16px] font-bold text-gray-900 mb-4'>Primeros pasos</h2>
+        <div className='space-y-3'>
+          {STEPS.map(item => {
+            const Icon = item.icon
+            return (
+              <div key={item.step} className='card p-5'>
+                <div className='flex items-start gap-4'>
+                  {/* Step number + icon */}
+                  <div className='flex flex-col items-center gap-1.5 flex-shrink-0'>
+                    <div
+                      className='w-10 h-10 flex items-center justify-center rounded-[8px]'
+                      style={{ background: item.iconBg }}
+                      aria-hidden='true'
+                    >
+                      <Icon size={19} style={{ color: item.iconColor }} />
+                    </div>
+                    <span className='text-[10px] font-bold text-gray-400 uppercase tracking-widest'>
+                      {item.step}
+                    </span>
+                  </div>
 
-      {/* Getting Started */}
-      <Section icon={Rocket} title="Primeros Pasos" colorClass="bg-blue-500/10 text-blue-600">
-        <HelpCard 
-          title="Configuración Inicial"
-          description="Prepara tu entorno para generar documentos profesionales con tu identidad de marca."
-          items={[
-            "Sube el logo de tu empresa en Settings",
-            "Configura tu firma digital para validez técnica",
-            "Establece tus datos de contacto básicos",
-            "Define tu moneda y formato de fecha preferido"
-          ]}
-          badge="Esencial"
-        />
-        <HelpCard 
-          title="Seguridad y Perfil"
-          description="Gestiona tu acceso y la información que ven tus clientes en la plataforma."
-          items={[
-            "Vincula tu cuenta de Google para acceso rápido",
-            "Mantén tus datos fiscales actualizados",
-            "Verifica tu rol y permisos en el sistema",
-            "Cierra sesión de forma segura en dispositivos compartidos"
-          ]}
-          badge="Seguridad"
-        />
-      </Section>
-
-      {/* Document Generation */}
-      <Section icon={FileText} title="Generación de Documentos" colorClass="bg-emerald-500/10 text-emerald-600">
-        <HelpCard 
-          title="Tipos de Documentos"
-          description="DocFlow soporta tres pilares fundamentales para tu gestión administrativa."
-          items={[
-            "Cuenta de Cobro: Facturación sencilla de servicios",
-            "Cotización: Propuestas comerciales detalladas",
-            "Contrato: Formalización legal de servicios",
-            "Exportación inmediata a PDF optimizado"
-          ]}
-          badge="Core"
-        />
-        <HelpCard 
-          title="Automatización de Cálculos"
-          description="Olvídate de las calculadoras. DocFlow hace el trabajo pesado por ti."
-          items={[
-            "Cálculo automático de Retención en la fuente",
-            "Sumatorias dinámicas de ítems y servicios",
-            "Desglose claro de impuestos y netos",
-            "Configuración personalizada de porcentajes"
-          ]}
-          badge="Smart"
-        />
-      </Section>
-
-      {/* Clients & History */}
-      <Section icon={Users} title="Gestión Integral" colorClass="bg-violet-500/10 text-violet-600">
-        <HelpCard 
-          title="Base de Datos de Clientes"
-          description="Ahorra tiempo reutilizando la información de tus clientes frecuentes."
-          items={[
-            "Almacenamiento de NIT/Cédula y direcciones",
-            "Autocompletado inteligente en nuevos documentos",
-            "Búsqueda rápida por nombre o documento",
-            "Gestión centralizada de contactos"
-          ]}
-          badge="CRM"
-        />
-        <HelpCard 
-          title="Historial de Actividad"
-          description="Mantén un control total sobre cada documento que has generado."
-          items={[
-            "Filtros avanzados por fecha y tipo",
-            "Estado de generación y descarga",
-            "Visualización previa antes de imprimir",
-            "Organización cronológica inteligente"
-          ]}
-          badge="Admin"
-        />
-      </Section>
-
-      {/* Tips Section */}
-      <section className="bg-primary/5 rounded-3xl p-8 md:p-12 relative overflow-hidden ring-1 ring-primary/10">
-        <div className="absolute -right-20 -bottom-20 opacity-10">
-          <Lightbulb size={300} className="text-primary" />
-        </div>
-        <div className="max-w-3xl relative z-10 space-y-6">
-          <div className="flex items-center gap-3 text-primary font-bold tracking-widest text-sm uppercase">
-            <Zap size={20} /> Pro Tip
-          </div>
-          <h2 className="text-3xl font-black text-on-surface">Optimiza tu Flujo de Trabajo</h2>
-          <p className="text-on-surface-variant leading-relaxed">
-            ¿Sabías que si configuras tu <strong>Retención en la Fuente</strong> por defecto en los Ajustes, se aplicará automáticamente a cada nueva Cuenta de Cobro? Esto te ahorrará minutos valiosos en cada factura.
-          </p>
-          <div className="flex flex-wrap gap-4 pt-4">
-            <button className="px-6 py-3 bg-primary text-white font-bold rounded-2xl hover:shadow-primary-glow transition-all flex items-center gap-2">
-              Ir a Ajustes <ChevronRight size={18} />
-            </button>
-          </div>
+                  <div className='flex-1 min-w-0'>
+                    <h3 className='text-[15px] font-bold text-gray-900 leading-tight mb-1'>
+                      {item.title}
+                    </h3>
+                    <p className='text-[13.5px] text-gray-500 leading-relaxed mb-3'>
+                      {item.desc}
+                    </p>
+                    <button
+                      onClick={() => navigate(item.action.path)}
+                      className='inline-flex items-center gap-1.5 text-[#0F2040] font-bold text-[13px] hover:opacity-65 transition-opacity'
+                    >
+                      {item.action.label}
+                      <ArrowRight size={14} aria-hidden='true' />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
         </div>
       </section>
 
-      {/* FAQ Mini */}
-      <section className="space-y-8">
-        <div className="text-center space-y-2">
-          <h2 className="text-3xl font-bold">Preguntas Frecuentes</h2>
-          <p className="text-on-surface-variant">Soluciones rápidas a dudas comunes</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="space-y-3">
-            <h4 className="font-bold text-lg flex items-center gap-2 text-primary">
-              <Info size={18} /> ¿Cómo edito un PDF?
-            </h4>
-            <p className="text-sm text-on-surface-variant leading-relaxed">
-              Los documentos generados son finales para garantizar integridad. Si necesitas cambios, genera uno nuevo desde el Historial.
-            </p>
-          </div>
-          <div className="space-y-3">
-            <h4 className="font-bold text-lg flex items-center gap-2 text-primary">
-              <Info size={18} /> ¿Es seguro mi logo?
-            </h4>
-            <p className="text-sm text-on-surface-variant leading-relaxed">
-              Sí, DocFlow almacena tus activos de marca de forma privada y solo los utiliza para embeberlos en tus documentos PDF.
-            </p>
-          </div>
-          <div className="space-y-3">
-            <h4 className="font-bold text-lg flex items-center gap-2 text-primary">
-              <Info size={18} /> ¿Donde están mis datos?
-            </h4>
-            <p className="text-sm text-on-surface-variant leading-relaxed">
-              Toda la información reside en nuestros servidores seguros de Google Cloud, protegidos por autenticación de grado industrial.
-            </p>
-          </div>
+      {/* ── Doc types ── */}
+      <section className='slide-up delay-2' aria-labelledby='doctypes-heading'>
+        <h2 id='doctypes-heading' className='text-[16px] font-bold text-gray-900 mb-4'>Tipos de documento</h2>
+        <div className='space-y-3'>
+          {DOC_TYPES.map(item => {
+            const Icon = item.icon
+            return (
+              <div key={item.name} className='card p-4 flex items-start gap-4'>
+                <div
+                  className='w-10 h-10 flex items-center justify-center rounded-[8px] flex-shrink-0'
+                  style={{ background: item.iconBg }}
+                  aria-hidden='true'
+                >
+                  <Icon size={19} style={{ color: item.iconColor }} />
+                </div>
+                <div className='flex-1 min-w-0'>
+                  <h3 className='text-[15px] font-bold text-gray-900 leading-tight mb-1'>{item.name}</h3>
+                  <p className='text-[13.5px] text-gray-500 leading-relaxed'>{item.desc}</p>
+                </div>
+              </div>
+            )
+          })}
         </div>
       </section>
 
-      {/* Footer Support */}
-      <footer className="text-center pt-20 border-t border-outline-variant/10">
-        <HelpCircle size={40} className="mx-auto text-primary/20 mb-4" />
-        <p className="text-sm text-on-surface-variant">
-          ¿Necesitas más ayuda? Contacta a soporte técnico o revisa el repositorio oficial.
-        </p>
-      </footer>
+      {/* ── FAQs ── */}
+      <section className='slide-up delay-3' aria-labelledby='faq-heading'>
+        <h2 id='faq-heading' className='text-[16px] font-bold text-gray-900 mb-4'>Preguntas frecuentes</h2>
+        <div className='space-y-3'>
+          {FAQS.map((item, i) => (
+            <div key={i} className='card p-4'>
+              <div className='flex items-start gap-3'>
+                <div
+                  className='w-7 h-7 flex items-center justify-center rounded-[8px] flex-shrink-0 mt-0.5'
+                  style={{ background: '#EEF3FE' }}
+                  aria-hidden='true'
+                >
+                  <HelpCircle size={15} style={{ color: '#2563EB' }} />
+                </div>
+                <div className='flex-1 min-w-0'>
+                  <h3 className='text-[14px] font-bold text-gray-900 leading-snug mb-1.5'>{item.q}</h3>
+                  <p className='text-[13.5px] text-gray-500 leading-relaxed'>{item.a}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Footer ── */}
+      <section className='text-center py-4 border-t border-gray-200' aria-hidden='true'>
+        <HelpCircle size={28} className='text-gray-300 mx-auto mb-2' />
+        <p className='text-[13px] text-gray-400'>¿Tiene alguna duda? Contacte a soporte técnico.</p>
+      </section>
     </div>
   )
 }

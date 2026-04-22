@@ -1,135 +1,138 @@
 import { useState } from 'react'
-import { useNavigate, Navigate } from 'react-router-dom'
 import { GoogleLogin } from '@react-oauth/google'
-import { FileText, AlertCircle, Loader2, CheckCircle2 } from 'lucide-react'
+import { Navigate, useNavigate } from 'react-router-dom'
+import { FileText, Download, Shield, Clock, Loader2, AlertCircle } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
-import { cn } from '@/lib/utils'
 
 const FEATURES = [
-  'Genera PDFs profesionales en segundos',
-  'Historial completo de documentos',
-  'Datos de empresa pre-cargados en cada PDF',
+  { icon: FileText,  label: 'Cuentas de cobro, cotizaciones y contratos' },
+  { icon: Download,  label: 'PDFs profesionales en segundos' },
+  { icon: Clock,     label: 'Historial siempre disponible' },
+  { icon: Shield,    label: 'Acceso seguro con Google' },
 ]
 
 export default function LoginPage() {
   const { loginWithGoogle, isAuthenticated } = useAuth()
   const navigate = useNavigate()
-  const [serverError, setServerError] = useState('')
-  const [isProcessing, setIsProcessing] = useState(false)
+  const [error, setError]         = useState('')
+  const [loading, setLoading]     = useState(false)
 
-  if (isAuthenticated) return <Navigate to="/dashboard" replace />
+  if (isAuthenticated) return <Navigate to='/dashboard' replace />
 
-  const handleGoogleSuccess = async (credentialResponse) => {
-    setServerError('')
-    setIsProcessing(true)
+  const handleSuccess = async (cred) => {
+    setError(''); setLoading(true)
     try {
-      await loginWithGoogle(credentialResponse.credential)
+      await loginWithGoogle(cred.credential)
       navigate('/dashboard')
-    } catch (err) {
-      setServerError(err.response?.data?.error || 'Error al iniciar sesión con Google.')
-    } finally {
-      setIsProcessing(false)
-    }
-  }
-
-  const handleGoogleError = () => {
-    setServerError('Error en la autenticación de Google. Inténtalo de nuevo.')
+    } catch (e) {
+      setError(e?.response?.data?.error || 'Error al iniciar sesión. Intente de nuevo.')
+    } finally { setLoading(false) }
   }
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* ── Left: Branding ── */}
-      <div className="hidden lg:flex flex-col justify-between w-[480px] shrink-0 bg-primary p-12 relative overflow-hidden">
-        {/* Decorative blobs */}
-        <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-white/5" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full bg-white/5 -translate-x-1/2 translate-y-1/2" />
+    <div className='min-h-[100dvh] flex flex-col lg:flex-row bg-[#F6F8FC]'>
 
+      {/* ── Left panel (desktop only) ── */}
+      <div className='hidden lg:flex flex-col justify-between w-[480px] flex-shrink-0 bg-[#0F2040] px-12 py-14'>
         {/* Logo */}
-        <div className="relative z-10 flex items-center gap-3">
-          <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-            <FileText size={20} className="text-white" />
+        <div className='flex items-center gap-3'>
+          <div className='w-10 h-10 rounded-[12px] bg-white/15 flex items-center justify-center'>
+            <FileText size={20} className='text-white' />
           </div>
-          <span className="text-white font-black text-xl tracking-widest uppercase">Docflow</span>
+          <span className='text-white font-bold text-xl tracking-tight'>DocFlow</span>
         </div>
 
-        {/* Hero */}
-        <div className="relative z-10">
-          <h1 className="text-4xl font-extrabold text-white leading-snug mb-4">
-            Su asistente digital<br />para documentos.
+        {/* Center content */}
+        <div>
+          <h1 className='text-4xl font-bold text-white leading-snug mb-6 tracking-tight'>
+            Documentos<br />profesionales,<br />
+            <span className='text-blue-300'>sin complicaciones.</span>
           </h1>
-          <p className="text-white/70 text-base leading-relaxed mb-8">
-            Acceda a su historial, facturas y contratos con la simplicidad y seguridad que usted merece.
+          <p className='text-white/60 text-base leading-relaxed mb-10'>
+            Genera PDFs listos para enviar en pocos clics. Sin formularios confusos, sin pasos innecesarios.
           </p>
-          <div className="space-y-3">
-            {FEATURES.map((f) => (
-              <div key={f} className="flex items-center gap-3">
-                <CheckCircle2 size={16} className="text-white/60 shrink-0" />
-                <span className="text-white/75 text-sm">{f}</span>
-              </div>
+          <ul className='space-y-4'>
+            {FEATURES.map((f, i) => (
+              <li key={i} className='flex items-center gap-3'>
+                <div className='w-8 h-8 rounded-[8px] bg-blue-500/20 flex items-center justify-center flex-shrink-0'>
+                  <f.icon size={16} className='text-blue-300' />
+                </div>
+                <span className='text-white/75 text-[15px]'>{f.label}</span>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
 
         {/* Footer */}
-        <div className="relative z-10">
-          <p className="text-white/40 text-xs">© 2026 DocFlow | Leonardo Meza. Todos los derechos reservados.</p>
-        </div>
+        <p className='text-white/30 text-xs'>© 2026 DocFlow · Leonardo Meza</p>
       </div>
 
-      {/* ── Right: Login ── */}
-      <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
-        <div className="w-full max-w-sm">
-          {/* Mobile logo */}
-          <div className="flex items-center gap-2 mb-8 lg:hidden">
-            <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
-              <FileText size={16} className="text-primary-foreground" />
-            </div>
-            <span className="font-black text-base tracking-widest uppercase text-foreground">Docflow</span>
+      {/* ── Right panel / Mobile full screen ── */}
+      <div className='flex-1 flex flex-col items-center justify-center px-6 py-12 lg:py-0'>
+
+        {/* Mobile logo */}
+        <div className='lg:hidden flex flex-col items-center mb-10'>
+          <div className='w-16 h-16 rounded-[12px] bg-[#0F2040] flex items-center justify-center mb-4 shadow-lg'>
+            <FileText size={28} className='text-white' />
           </div>
+          <h1 className='text-2xl font-bold text-gray-900 tracking-tight'>DocFlow</h1>
+          <p className='text-gray-500 text-sm mt-1'>Documentos profesionales</p>
+        </div>
 
-          <div className="mb-10 text-center lg:text-left">
-            <h2 className="text-3xl font-bold text-foreground mb-2">Bienvenido</h2>
-            <p className="text-muted-foreground text-sm">Gestiona tus documentos de forma segura con Google</p>
-          </div>
-
-          <div className="flex flex-col items-center gap-6">
-            {/* Google Login Button Container */}
-            <div className="w-full flex justify-center py-4">
-              {isProcessing ? (
-                <div className="flex flex-col items-center gap-4 text-muted-foreground">
-                  <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                  <p className="text-sm">Verificando cuenta...</p>
-                </div>
-              ) : (
-                <GoogleLogin
-                  onSuccess={handleGoogleSuccess}
-                  onError={handleGoogleError}
-                  theme="filled_blue"
-                  shape="pill"
-                  width={320}
-                  size="large"
-                  text="signin_with"
-                />
-              )}
-            </div>
-
-            {/* Server error */}
-            {serverError && (
-              <div className="w-full flex items-center gap-2 rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-2.5 text-sm text-destructive mt-2">
-                <AlertCircle size={15} className="shrink-0" />
-                {serverError}
-              </div>
-            )}
-          </div>
-
-          {/* Login Note */}
-          <div className="mt-12 pt-6 border-t border-border">
-            <p className="text-xs text-muted-foreground text-center leading-relaxed">
-              Al iniciar sesión, aceptas nuestra política de privacidad y el uso de tu cuenta de Google solo para fines de autenticación en la plataforma.
+        {/* Login card */}
+        <div className='w-full max-w-sm'>
+          <div className='mb-8'>
+            <h2 className='text-2xl font-bold text-gray-900 tracking-tight'>Bienvenido de nuevo</h2>
+            <p className='text-gray-500 text-[15px] mt-2 leading-relaxed'>
+              Ingrese con su cuenta de Google para acceder a sus documentos.
             </p>
           </div>
+
+          {/* Features (mobile only) */}
+          <div className='lg:hidden bg-[#F6F8FC] rounded-[12px] px-5 py-4 mb-6 space-y-3'>
+            {FEATURES.map((f, i) => (
+              <div key={i} className='flex items-center gap-3'>
+                <div className='w-7 h-7 rounded-[8px] bg-[#0F2040]/10 flex items-center justify-center flex-shrink-0'>
+                  <f.icon size={14} className='text-[#0F2040]' />
+                </div>
+                <span className='text-gray-600 text-[13px] font-medium'>{f.label}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Auth */}
+          {loading ? (
+            <div className='flex flex-col items-center py-8 gap-3'>
+              <Loader2 className='w-10 h-10 animate-spin text-[#0F2040]' />
+              <p className='text-gray-500 text-[15px]'>Verificando su cuenta...</p>
+            </div>
+          ) : (
+            <div className='flex flex-col items-center gap-4'>
+              <GoogleLogin
+                onSuccess={handleSuccess}
+                onError={() => setError('Error de autenticación. Intente de nuevo.')}
+                theme='outline'
+                shape='rectangular'
+                width={360}
+                size='large'
+                text='signin_with'
+                locale='es'
+              />
+              <p className='text-gray-400 text-xs text-center leading-relaxed max-w-[280px]'>
+                Su cuenta de Google se usa únicamente para identificarle de forma segura.
+              </p>
+            </div>
+          )}
+
+          {error && (
+            <div className='mt-4 flex items-start gap-2.5 rounded-[12px] bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700'>
+              <AlertCircle size={16} className='flex-shrink-0 mt-0.5' />
+              <p>{error}</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
   )
 }
+
