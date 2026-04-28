@@ -13,16 +13,18 @@ export function useDocument() {
   const [pdfBlobUrl, setPdfBlobUrl] = useState(null)
   const [docEntry,   setDocEntry]   = useState(null)
 
+  const [docNumber,  setDocNumber]  = useState(null)
+
   const generate = useCallback(async (payload) => {
     setLoading(true)
     setError(null)
     setPdfBlobUrl(null)
+    setDocNumber(null)
     try {
-      const blob = await documentsApi.generate(payload)
+      const { blob, number } = await documentsApi.generate(payload)
       const url  = URL.createObjectURL(blob)
       setPdfBlobUrl(url)
-      // Extract doc metadata from response headers is not accessible via axios blob,
-      // so we refresh history separately.
+      setDocNumber(number)
       return url
     } catch (err) {
       const msg = err.response?.data?.error || 'Error generando el documento'
@@ -40,5 +42,5 @@ export function useDocument() {
     setError(null)
   }, [pdfBlobUrl])
 
-  return { generate, loading, error, pdfBlobUrl, docEntry, clearPreview }
+  return { generate, loading, error, pdfBlobUrl, docEntry, docNumber, clearPreview }
 }

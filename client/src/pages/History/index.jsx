@@ -53,13 +53,14 @@ export default function HistoryPage() {
     }
   }
 
-  const handleDownload = async (id, number) => {
+  const handleDownload = async (id, number, clientName) => {
     setAction(id)
     try {
       const blob = await download(id)
       const url  = URL.createObjectURL(blob)
       const a    = document.createElement('a')
-      a.href = url; a.download = `${number}.pdf`
+      const fileName = clientName ? `${clientName} - ${number}.pdf` : `${number}.pdf`
+      a.href = url; a.download = fileName
       document.body.appendChild(a); a.click()
       document.body.removeChild(a); URL.revokeObjectURL(url)
     } catch { alert('Error descargando') }
@@ -204,7 +205,7 @@ export default function HistoryPage() {
                           <button 
                             className="p-2 text-on-surface-variant hover:text-primary hover:bg-primary-fixed rounded-lg transition-all disabled:opacity-50" 
                             title="Descargar PDF"
-                            onClick={() => handleDownload(doc.id, doc.number)}
+                            onClick={() => handleDownload(doc.id, doc.number, doc.clientName)}
                             disabled={isAct}
                           >
                             {isAct ? <Loader2 size={20} className="animate-spin" /> : <Download size={20} />}

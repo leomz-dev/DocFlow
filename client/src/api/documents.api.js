@@ -5,7 +5,10 @@ import http from './http'
  * Returns a Blob (PDF).
  */
 export const generate = (payload) =>
-  http.post('/documents/generate', payload, { responseType: 'blob' }).then((r) => r.data)
+  http.post('/documents/generate', payload, { responseType: 'blob' }).then((r) => ({
+    blob: r.data,
+    number: r.headers['x-doc-number']
+  }))
 
 export const getHistory = () =>
   http.get('/documents/history').then((r) => r.data)

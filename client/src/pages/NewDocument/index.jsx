@@ -408,7 +408,7 @@ function StepTotals({ register, watch, control, isContract }) {
 export default function NewDocumentPage() {
   const { type }     = useParams()
   const navigate     = useNavigate()
-  const { generate, loading, error, pdfBlobUrl, clearPreview } = useDocument()
+  const { generate, loading, error, pdfBlobUrl, docNumber, clearPreview } = useDocument()
   const [showPreview, setShowPreview] = useState(false)
   const [step, setStep]               = useState(1)
   const STEPS = ['Cliente', 'Servicios', 'Resumen']
@@ -545,7 +545,7 @@ export default function NewDocumentPage() {
         open={showPreview}
         onOpenChange={open => { setShowPreview(open); if (!open) clearPreview() }}
         blobUrl={pdfBlobUrl}
-        title={`${meta?.label} — Vista previa`}
+        title={docNumber ? `${watch('client.name') || 'Cliente'} - ${docNumber}` : `${meta?.label} — Vista previa`}
       />
     </div>
   )
