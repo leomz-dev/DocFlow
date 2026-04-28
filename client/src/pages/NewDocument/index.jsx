@@ -441,7 +441,18 @@ export default function NewDocumentPage() {
     if (ok) setStep(s => s + 1)
   }
 
+  // Prevent "Enter" from submitting the form in steps 1 and 2
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && step < 3) {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
+        e.preventDefault()
+        goNext()
+      }
+    }
+  }
+
   const onSubmit = async (data) => {
+    if (step < 3) return
     try {
       await generate({ type, ...data })
       setShowPreview(true)
@@ -460,7 +471,7 @@ export default function NewDocumentPage() {
         <Icon size={14} />{meta?.label}
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} onKeyDown={handleKeyDown}>
         <StepBar step={step} labels={STEPS} />
 
         {/* Step content */}
@@ -507,6 +518,7 @@ export default function NewDocumentPage() {
 
           {step < 3 ? (
             <button
+              key='btn-next'
               type='button'
               onClick={goNext}
               className='btn btn-primary gap-2'
@@ -515,6 +527,7 @@ export default function NewDocumentPage() {
             </button>
           ) : (
             <button
+              key='btn-submit'
               type='submit'
               disabled={loading}
               className='btn btn-primary gap-2'

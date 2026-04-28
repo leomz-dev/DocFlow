@@ -95,23 +95,23 @@ export default function HistoryPage() {
 
       {/* Filters Bento Section */}
       <div className="grid grid-cols-12 gap-4 mb-8">
-        <div className="col-span-12 md:col-span-6 lg:col-span-4 bg-white dark:bg-slate-900 p-6 rounded-[2rem] shadow-surface-sm border border-outline-variant/10">
-          <label className="block text-[10px] font-black text-on-surface-variant uppercase tracking-[0.2em] mb-4 font-sans opacity-60">Tipo de Documento</label>
+        <div className="col-span-12 md:col-span-6 lg:col-span-5 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm">
+          <label className="section-label mb-4">Filtrar por tipo</label>
           <div className="flex flex-wrap gap-2">
             {[
-              { id: 'Todos',           label: 'Todos',        colors: 'bg-primary text-white' },
-              { id: 'Cuenta de Cobro', label: 'Cuenta Cobro', colors: 'bg-blue-50 text-[#002f87]' },
-              { id: 'Cotización',      label: 'Cotización',   colors: 'bg-amber-50 text-amber-900' },
-              { id: 'Contrato',        label: 'Contrato',     colors: 'bg-emerald-50 text-emerald-900' },
+              { id: 'Todos',           label: 'Todos',        colors: 'bg-slate-900 dark:bg-white text-white dark:text-slate-900' },
+              { id: 'Cuenta de Cobro', label: 'Cuenta Cobro', colors: 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' },
+              { id: 'Cotización',      label: 'Cotización',   colors: 'bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200' },
+              { id: 'Contrato',        label: 'Contrato',     colors: 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-200' },
             ].map(t => (
               <button 
                 key={t.id}
                 onClick={() => setType(t.id)}
                 className={cn(
-                  "px-4 py-1.5 rounded-xl text-[11px] font-bold transition-all duration-200 font-sans border border-transparent",
+                  "px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 border border-transparent",
                   typeFilter === t.id 
-                    ? t.colors + " shadow-sm border-current/10" 
-                    : "bg-surface-container-low/50 text-on-surface-variant/70 hover:bg-surface-container-high hover:text-on-surface"
+                    ? t.colors + " shadow-sm border-blue-500/20 ring-2 ring-blue-500/10" 
+                    : "bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-700"
                 )}
               >
                 {t.label}
@@ -119,21 +119,19 @@ export default function HistoryPage() {
             ))}
           </div>
         </div>
-        <div className="col-span-12 md:col-span-6 lg:col-span-8 bg-surface-container-lowest p-6 rounded-[1.5rem] shadow-surface-sm">
-          <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-3 font-sans">Buscar</label>
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50">
-                <Search size={16} />
-              </span>
-              <input 
-                className="w-full bg-surface-container-low border-none rounded-lg py-2 pl-9 pr-3 text-xs focus:ring-1 focus:ring-primary font-sans text-on-surface outline-none" 
-                placeholder="Número, ID o Cliente..." 
-                type="text"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-              />
-            </div>
+        <div className="col-span-12 md:col-span-6 lg:col-span-7 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm">
+          <label className="section-label mb-3">Buscar por nombre o número</label>
+          <div className="relative">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
+              <Search size={16} />
+            </span>
+            <input 
+              className="field-input h-11 pl-10" 
+              placeholder="Ej: 001, Juan Perez..." 
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
           </div>
         </div>
       </div>

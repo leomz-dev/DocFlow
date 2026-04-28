@@ -11,11 +11,33 @@
 
 @layer base {
   :root {
-    /* ── Brand ── */
+    /* ── Shadcn / Tailwind Theme Tokens ── */
+    --background: 226 25% 94%; /* #EDEEF2 */
+    --foreground: 224 71% 4%;  /* #0B0E14 */
+    --card: 0 0% 100%;
+    --card-foreground: 224 71% 4%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71% 4%;
+    --primary: 218 62% 15%; /* #0F2040 (Navy) */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 221 83% 53%; /* #2563EB (Blue) */
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221 83% 53%;
+    --radius: 0.75rem; /* 12px */
+
+    /* ── Brand (Legacy variables kept for compatibility) ── */
     --navy:        #0F2040;
     --navy-mid:    #162E58;
     --navy-soft:   #E8EEF7;
-    --accent:      #2563EB;
+    --accent-hex:  #2563EB;
     --accent-soft: #EEF3FE;
 
     /* ── Surfaces ── */
@@ -83,7 +105,7 @@
 
   /* Focus ring — uses --r-xs so it's consistent */
   :focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid #2563EB;
     outline-offset: 2px;
     border-radius: var(--r-xs);
   }
@@ -219,7 +241,7 @@
   .field-input:hover  { border-color: var(--gray-400); }
   .field-input:focus  {
     outline: none;
-    border-color: var(--accent);
+    border-color: #2563EB;
     box-shadow: 0 0 0 3px rgba(37,99,235,0.14);
   }
   .field-input.error { border-color: var(--danger); }

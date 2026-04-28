@@ -9,13 +9,13 @@ import { cn } from '@/lib/utils'
 function EditorialInput({ label, error, ...props }) {
   return (
     <div className="space-y-1.5 w-full">
-      <label className="block text-[9px] font-bold text-on-surface-variant/70 uppercase tracking-widest font-sans px-0.5">
+      <label className="field-label px-0.5">
         {label}
       </label>
       <input
         className={cn(
-          "w-full bg-surface-container-low/60 border border-outline-variant/10 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 transition-all text-sm font-medium outline-none text-on-surface placeholder:text-on-surface-variant/30",
-          error && "ring-2 ring-error/50 bg-error-container/10"
+          "field-input",
+          error && "error"
         )}
         {...props}
       />
@@ -81,15 +81,15 @@ export function ClientManager({ compact = false }) {
   return (
     <div className="space-y-6">
       {!compact && (
-        <div className="flex items-center justify-between border-b border-outline-variant/10 pb-4">
-          <h2 className="text-lg font-bold text-on-surface flex items-center gap-2 font-sans">
-            <Users size={20} className="text-primary" /> Directorio de Clientes
+        <div className="flex items-center justify-between border-b border-gray-100 pb-5 mb-6">
+          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+            <Users size={22} className="text-blue-600" /> Directorio de Clientes
           </h2>
           <button 
             onClick={openNewClient}
-            className="group flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-bold rounded-xl shadow-surface-md hover:shadow-primary-glow active:scale-95 transition-all"
+            className="btn-primary h-10 px-5 text-sm"
           >
-            <Plus size={18} className="text-white/80 group-hover:text-white" />
+            <Plus size={18} />
             Nuevo Cliente
           </button>
         </div>
@@ -110,46 +110,40 @@ export function ClientManager({ compact = false }) {
             />
           </div>
           
-          <div className={cn("bg-surface-container-low/30 rounded-[1.5rem] overflow-y-auto max-h-[500px] border border-outline-variant/5", compact && "max-h-[300px]")}>
-            {!compact && (
-               <div className="p-3 md:hidden">
-                  <button 
-                    onClick={openNewClient}
-                    className="w-full flex items-center justify-center gap-2 py-2 bg-primary text-white text-xs font-bold rounded-xl"
-                  >
-                    <Plus size={14} /> Nuevo Cliente
-                  </button>
-               </div>
-            )}            {loading ? (
-              <div className="flex items-center justify-center p-12 text-on-surface-variant/60 italic text-sm font-sans">
+          <div className={cn("bg-gray-50/50 dark:bg-slate-900/50 rounded-2xl overflow-y-auto max-h-[500px] border border-gray-100 dark:border-slate-800", compact && "max-h-[350px]")}>
+            {loading ? (
+              <div className="flex items-center justify-center p-12 text-gray-400 italic text-sm">
                 Cargando directorio...
               </div>
             ) : filteredClients.length === 0 ? (
-              <div className="flex flex-col items-center justify-center text-center p-12 text-on-surface-variant/40">
+              <div className="flex flex-col items-center justify-center text-center p-12 text-gray-400">
                 <Users size={40} className="opacity-20 mb-3" />
-                <p className="text-sm font-bold font-sans">No se encontraron clientes</p>
+                <p className="text-sm font-bold">No se encontraron clientes</p>
                 <p className="text-xs mt-1">Intente con otro término o cree uno nuevo.</p>
               </div>
             ) : (
-              <div className="divide-y divide-outline-variant/5">
+              <div className="divide-y divide-gray-100 dark:divide-slate-800">
                 {filteredClients.map(client => (
                   <button
                     key={client.id}
                     onClick={() => handleSelect(client)}
                     className={cn(
-                      "w-full text-left px-5 py-4 hover:bg-surface-container-low transition-all flex items-center gap-4 group",
-                      selectedClient?.id === client.id && "bg-white dark:bg-slate-900 shadow-sm z-10 scale-[1.02] border-x border-outline-variant/10"
+                      "w-full text-left px-5 py-4 hover:bg-white dark:hover:bg-slate-800 transition-all flex items-center gap-4 group relative",
+                      selectedClient?.id === client.id && "bg-white dark:bg-slate-800 shadow-md z-10 scale-[1.01]"
                     )}
                   >
+                    {selectedClient?.id === client.id && (
+                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-600 rounded-r-full" />
+                    )}
                     <div className={cn(
-                      "h-10 w-10 rounded-xl flex items-center justify-center shrink-0 font-bold text-xs uppercase transition-colors shadow-sm",
-                      selectedClient?.id === client.id ? "bg-primary text-white" : "bg-secondary-container text-on-secondary-container"
+                      "h-10 w-10 rounded-lg flex items-center justify-center shrink-0 font-bold text-xs uppercase transition-colors shadow-sm",
+                      selectedClient?.id === client.id ? "bg-blue-600 text-white" : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
                     )}>
                       {client.name.substring(0, 2)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold truncate text-on-surface font-sans">{client.name}</p>
-                      <p className="text-[10px] text-on-surface-variant/60 font-bold uppercase tracking-wider mt-0.5">{client.nit || 'Sin Identificación'}</p>
+                      <p className="text-sm font-bold truncate text-gray-900 dark:text-white">{client.name}</p>
+                      <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mt-0.5">{client.nit || 'Sin Identificación'}</p>
                     </div>
                   </button>
                 ))}
@@ -161,18 +155,18 @@ export function ClientManager({ compact = false }) {
         {/* Detalles del cliente */}
         <div className="lg:col-span-8">
           {selectedClient ? (
-            <div className="bg-surface-container-low/40 rounded-[2rem] p-8 relative border border-outline-variant/10 animate-fade-in h-full">
-              <div className="absolute top-8 right-8 flex gap-2">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 relative border border-gray-100 dark:border-slate-800 animate-fade-in h-full shadow-sm">
+              <div className="absolute top-6 right-6 flex gap-2">
                 <button 
                   onClick={() => openEditClient(selectedClient)}
-                  className="p-2.5 text-on-surface-variant hover:text-primary hover:bg-white dark:hover:bg-slate-800 rounded-xl transition-all shadow-sm"
+                  className="p-2.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all shadow-sm"
                   title="Editar Información"
                 >
                   <Edit2 size={20} />
                 </button>
                 <button 
                   onClick={() => handleDelete(selectedClient.id)}
-                  className="p-2.5 text-on-surface-variant hover:text-error hover:bg-error-container/20 rounded-xl transition-all shadow-sm"
+                  className="p-2.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all shadow-sm"
                   title="Eliminar Cliente"
                 >
                   <Trash2 size={20} />
@@ -180,13 +174,13 @@ export function ClientManager({ compact = false }) {
               </div>
 
               <div className="flex items-center gap-6 mb-10">
-                <div className="h-20 w-20 rounded-[1.5rem] bg-primary text-on-primary flex items-center justify-center font-bold text-3xl uppercase shadow-primary-md">
+                <div className="h-20 w-20 rounded-2xl bg-[var(--navy)] text-white flex items-center justify-center font-bold text-3xl uppercase shadow-lg">
                   {selectedClient.name.substring(0, 2)}
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold text-on-surface font-sans tracking-tight">{selectedClient.name}</h3>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">{selectedClient.name}</h3>
                   <div className="flex items-center gap-3 mt-2">
-                    <span className="text-[10px] font-bold bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full uppercase tracking-widest">
+                    <span className="text-[10px] font-bold bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full uppercase tracking-widest">
                       {selectedClient.nit || 'NIT NO DISPONIBLE'}
                     </span>
                   </div>
@@ -194,116 +188,116 @@ export function ClientManager({ compact = false }) {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="bg-white dark:bg-slate-900/40 p-5 rounded-2xl shadow-surface-sm overflow-hidden">
-                  <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest font-sans mb-2 flex items-center gap-2">
-                    <Mail size={14} className="text-primary" /> Correo Electrónico
+                <div className="bg-slate-50 dark:bg-slate-800/40 p-5 rounded-2xl border border-gray-100 dark:border-slate-800 overflow-hidden">
+                  <p className="section-label mb-2 flex items-center gap-2">
+                    <Mail size={14} className="text-blue-600" /> Correo Electrónico
                   </p>
-                  <p className="text-sm font-semibold text-on-surface font-sans truncate" title={selectedClient.email}>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white truncate" title={selectedClient.email}>
                     {selectedClient.email || 'No registrado'}
                   </p>
                 </div>
-                <div className="bg-white dark:bg-slate-900/40 p-5 rounded-2xl shadow-surface-sm overflow-hidden">
-                  <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest font-sans mb-2 flex items-center gap-2">
-                    <Phone size={14} className="text-primary" /> Teléfono
+                <div className="bg-slate-50 dark:bg-slate-800/40 p-5 rounded-2xl border border-gray-100 dark:border-slate-800 overflow-hidden">
+                  <p className="section-label mb-2 flex items-center gap-2">
+                    <Phone size={14} className="text-blue-600" /> Teléfono
                   </p>
-                  <p className="text-sm font-semibold text-on-surface font-sans truncate" title={selectedClient.phone}>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white truncate" title={selectedClient.phone}>
                     {selectedClient.phone || 'No registrado'}
                   </p>
                 </div>
-                <div className="bg-white dark:bg-slate-900/40 p-5 rounded-2xl shadow-surface-sm overflow-hidden">
-                  <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest font-sans mb-2 flex items-center gap-2">
-                    <MapPin size={14} className="text-primary" /> Ubicación
+                <div className="bg-slate-50 dark:bg-slate-800/40 p-5 rounded-2xl border border-gray-100 dark:border-slate-800 overflow-hidden">
+                  <p className="section-label mb-2 flex items-center gap-2">
+                    <MapPin size={14} className="text-blue-600" /> Ubicación
                   </p>
-                  <p className="text-sm font-semibold text-on-surface font-sans truncate" title={selectedClient.city}>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white truncate" title={selectedClient.city}>
                     {selectedClient.city || '—'}
                   </p>
                 </div>
-                <div className="bg-white dark:bg-slate-900/40 p-5 rounded-2xl shadow-surface-sm overflow-hidden">
-                  <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest font-sans mb-2 flex items-center gap-2">
-                    <Building size={14} className="text-primary" /> Dirección Fiscal
+                <div className="bg-slate-50 dark:bg-slate-800/40 p-5 rounded-2xl border border-gray-100 dark:border-slate-800 overflow-hidden">
+                  <p className="section-label mb-2 flex items-center gap-2">
+                    <Building size={14} className="text-blue-600" /> Dirección Fiscal
                   </p>
-                  <p className="text-sm font-semibold text-on-surface font-sans truncate" title={selectedClient.address}>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white truncate" title={selectedClient.address}>
                     {selectedClient.address || '—'}
                   </p>
                 </div>
               </div>
             </div>
           ) : (
-             <div className="h-full border-2 border-dashed border-outline-variant/20 rounded-[2rem] flex flex-col items-center justify-center p-12 text-center text-on-surface-variant/40 bg-surface-container-low/10">
+             <div className="h-full border-2 border-dashed border-gray-100 dark:border-slate-800 rounded-2xl flex flex-col items-center justify-center p-12 text-center text-gray-400 bg-gray-50/30">
               <Users size={48} className="opacity-10 mb-4" />
-              <p className="text-base font-bold font-sans text-on-surface/60">Seleccione un cliente</p>
-              <p className="text-sm mt-1 max-w-xs">Revise los detalles de su base de datos o cree un nuevo perfil comercial en el panel lateral.</p>
+              <p className="text-base font-bold text-gray-600">Seleccione un cliente</p>
+              <p className="text-sm mt-1 max-w-xs text-gray-400">Revise los detalles de su base de datos o cree un nuevo perfil comercial en el panel lateral.</p>
              </div>
           )}
         </div>
       </div>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[550px] !rounded-[2.5rem] p-0 overflow-hidden bg-white dark:bg-slate-900 border-none shadow-[0_20px_50px_rgba(0,0,0,0.15)] animate-scale-in">
-          <div className="bg-primary/5 p-8 border-b border-outline-variant/10">
+        <DialogContent className="sm:max-w-[550px] p-0 overflow-hidden bg-white dark:bg-slate-900 border-none shadow-lg rounded-2xl">
+          <div className="bg-slate-50 dark:bg-slate-800/50 p-8 border-b border-gray-100 dark:border-slate-700">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-black font-sans text-on-surface tracking-tight">
-                {isEditing ? 'Editar Perfil Comercial' : 'Nuevo Cliente'}
+              <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+                {isEditing ? 'Editar Perfil' : 'Nuevo Cliente'}
               </DialogTitle>
-              <p className="text-xs font-medium text-on-surface-variant opacity-70 mt-1">
-                Complete la información legal y de contacto del cliente para la generación de documentos.
+              <p className="text-sm text-gray-500 mt-1.5">
+                Complete la información para la generación de documentos.
               </p>
             </DialogHeader>
           </div>
 
           <div className="p-8">
-            <form id="client-form" onSubmit={handleSubmit} className="space-y-6">
-              <EditorialInput 
-                label="Nombre o Razón Social *" 
-                required 
-                value={formData.name} 
-                onChange={e => setFormData(p => ({...p, name: e.target.value}))} 
-                placeholder="Ej: Innova Tech S.A.S." 
-              />
+            <form id="client-form" onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="md:col-span-2">
+                <EditorialInput 
+                  label="Nombre o Razón Social *" 
+                  required 
+                  value={formData.name} 
+                  onChange={e => setFormData(p => ({...p, name: e.target.value}))} 
+                  placeholder="Ej: Innova Tech S.A.S." 
+                />
+              </div>
               
-              <div className="grid grid-cols-2 gap-6">
+              <EditorialInput 
+                label="NIT / C.C." 
+                value={formData.nit} 
+                onChange={e => setFormData(p => ({...p, nit: e.target.value}))} 
+                placeholder="900.123.456-7" 
+              />
+              <EditorialInput 
+                label="Teléfono" 
+                value={formData.phone} 
+                onChange={e => setFormData(p => ({...p, phone: e.target.value}))} 
+                placeholder="+57 300 000 0000" 
+              />
+
+              <div className="md:col-span-2">
                 <EditorialInput 
-                  label="NIT / C.C." 
-                  value={formData.nit} 
-                  onChange={e => setFormData(p => ({...p, nit: e.target.value}))} 
-                  placeholder="900.123.456-7" 
-                />
-                <EditorialInput 
-                  label="Teléfono Móvil" 
-                  value={formData.phone} 
-                  onChange={e => setFormData(p => ({...p, phone: e.target.value}))} 
-                  placeholder="+57 300 000 0000" 
+                  label="Correo Electrónico" 
+                  type="email" 
+                  value={formData.email} 
+                  onChange={e => setFormData(p => ({...p, email: e.target.value}))} 
+                  placeholder="gerencia@empresa.com" 
                 />
               </div>
 
               <EditorialInput 
-                label="Correo Electrónico de Facturación" 
-                type="email" 
-                value={formData.email} 
-                onChange={e => setFormData(p => ({...p, email: e.target.value}))} 
-                placeholder="gerencia@empresa.com" 
+                label="Ciudad" 
+                value={formData.city} 
+                onChange={e => setFormData(p => ({...p, city: e.target.value}))} 
+                placeholder="Bogotá D.C." 
               />
-
-              <div className="grid grid-cols-2 gap-6">
-                <EditorialInput 
-                  label="Ciudad / Municipio" 
-                  value={formData.city} 
-                  onChange={e => setFormData(p => ({...p, city: e.target.value}))} 
-                  placeholder="Bogotá D.C." 
-                />
-                <EditorialInput 
-                  label="Dirección de Oficina" 
-                  value={formData.address} 
-                  onChange={e => setFormData(p => ({...p, address: e.target.value}))} 
-                  placeholder="Calle 100 # 15-20" 
-                />
-              </div>
+              <EditorialInput 
+                label="Dirección" 
+                value={formData.address} 
+                onChange={e => setFormData(p => ({...p, address: e.target.value}))} 
+                placeholder="Calle 100 # 15-20" 
+              />
             </form>
 
-            <div className="flex justify-end items-center gap-4 mt-10 pt-6 border-t border-outline-variant/10">
+            <div className="flex justify-end items-center gap-3 mt-10 pt-6 border-t border-gray-100 dark:border-slate-800">
               <button 
                 type="button" 
-                className="text-sm font-bold text-on-surface-variant hover:text-on-surface transition-colors px-4 py-2"
+                className="btn-ghost"
                 onClick={() => setIsModalOpen(false)}
               >
                 Cancelar
@@ -312,9 +306,9 @@ export function ClientManager({ compact = false }) {
                 type="submit" 
                 form="client-form" 
                 disabled={submitLoading}
-                className="bg-primary text-white px-10 py-3 rounded-2xl text-sm font-bold shadow-primary-glow hover:shadow-primary-lg transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2"
+                className="btn-primary min-h-[44px] px-8"
               >
-                {submitLoading ? <Loader2 className="w-4 h-4 animate-spin text-white" /> : (isEditing ? 'Actualizar Perfil' : 'Crear Cliente')}
+                {submitLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : (isEditing ? 'Actualizar' : 'Crear Cliente')}
               </button>
             </div>
           </div>

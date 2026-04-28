@@ -1,6 +1,6 @@
 ================================================================================
   DOCFLOW — CONTEXTO COMPLETO DEL PROYECTO
-  Generado: 2026-04-20
+  Generado: 2026-04-27
 ================================================================================
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -377,13 +377,18 @@ El build de producción se genera con:
   (output en client/dist/)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-12. ESTADO ACTUAL DEL DEPLOYMENT (al 2026-04-20)
+12. ESTADO ACTUAL (al 2026-04-27)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Se estuvo trabajando en desplegar DocFlow a Azure. Los recursos de Azure
-fueron creados. El estado aproximado al momento de generar este contexto:
+Se finalizó una refactorización integral de UI/UX, transformando DocFlow en una 
+aplicación con diseño "luxury-minimalist" orientada a mobile-first, con mejoras de 
+accesibilidad (A11y) y micro-interacciones.
+También se corrigieron configuraciones de entorno (CORS y CLIENT_URL) para
+soportar correctamente producción y desarrollo.
 
 COMPLETADO:
+  ✅ Refactor de UI/UX (Luxury Minimalist, mobile-first, A11y).
+  ✅ Configuración de CLIENT_URL y CORS para dev/prod.
   ✅ Azure Container Registry (ACR) configurado
   ✅ Dockerfile multi-stage listo (Puppeteer + Chromium sistema)
   ✅ Pipeline GitHub Actions (deploy-backend.yml) configurado
@@ -393,25 +398,10 @@ COMPLETADO:
   ✅ Azure Static Web Apps configurado para el frontend
   ✅ Health check endpoint (/api/health) implementado
 
-PENDIENTE / EN PROCESO:
-  ⚠️  Configurar Application Settings en App Service:
-        WEBSITES_PORT = 8080
-        DATABASE_URL  = postgresql://...  (Azure PostgreSQL connection string)
-        JWT_SECRET    = <valor secreto>
-        GOOGLE_CLIENT_ID = <OAuth2 client ID>
-        CLIENT_URL    = <URL del Static Web App>
-        NODE_ENV      = production
-
-  ⚠️  Configurar CORS en la App Service para el dominio del Static Web App
-  
-  ⚠️  Ejecutar migraciones de Prisma contra la base de datos de producción:
-        npx prisma migrate deploy
-        (desde el contexto del contenedor o con DATABASE_URL de producción)
-
-  ⚠️  Configurar VITE_API_URL en el build del frontend con la URL del App Service
-  
-  ⚠️  El COOP (Cross-Origin-Opener-Policy) header puede interferir con Google OAuth popup
-      → ya mitigado en código: helmet({ crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" } })
+  ✅ Application Settings en App Service configurados (WEBSITES_PORT, DATABASE_URL, JWT_SECRET, etc.)
+  ✅ Migraciones de Prisma ejecutadas en la base de datos de producción
+  ✅ Frontend conectado al App Service (VITE_API_URL configurado)
+  ✅ Error COOP (Cross-Origin-Opener-Policy) con Google OAuth solucionado
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 13. COMANDOS ÚTILES
@@ -470,21 +460,25 @@ FRONTEND BUILD:
 Todas las rutas privadas pasan por PrivateRoute que verifica isAuthenticated del AuthContext.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-15. DESIGN SYSTEM (TailwindCSS)
+15. DESIGN SYSTEM Y UI/UX (TailwindCSS)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-El proyecto usa un design system inspirado en Material Design 3 con variables
-CSS customizadas definidas en client/src/index.css y extendidas en
-client/tailwind.config.js.
+El proyecto cuenta con una interfaz "luxury-minimalist" enfocada en mobile-first, 
+diseñada para brindar una experiencia premium, accesible y profesional.
 
-Paleta principal:
+Características de UI/UX:
+  - Tokens de border-radius unificados: 12px para contenedores principales (cards, modales) 
+    y 8px para elementos interactivos (botones, inputs).
+  - Jerarquía visual de alto contraste y micro-interacciones pulidas.
+  - Estricto cumplimiento de Accesibilidad (A11y): etiquetas aria-labels, 
+    HTML semántico y áreas táctiles (touch targets) ampliadas.
+  - Paleta de colores minimalista y elegante, con soporte para custom properties
+    definidas en client/src/index.css y extendidas en tailwind.config.js.
+
+Paleta base de variables:
   --primary, --on-primary, --primary-container, --on-primary-container
   --secondary, --on-secondary, --secondary-container
-  --tertiary, --on-tertiary, --tertiary-container
-  --surface, --surface-container-lowest, --surface-container-low, --surface-container-high
-  --on-surface, --on-surface-variant
-  --outline-variant
-  --error, --error-container
+  --surface, --on-surface, --surface-container-lowest, etc.
 
 Tipografía: Inter (Google Fonts), clase font-sans
 
