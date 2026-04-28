@@ -157,7 +157,7 @@ function StepClient({ register, errors, clients, setValue }) {
 
       {clients?.length > 0 && (
         <Field label='Cliente guardado' hint='Seleccione uno para cargar sus datos automáticamente.'>
-          <div className='relative'>
+          <div className='relative tour-doc-client'>
             <select
               onChange={e => applyClient(e.target.value)}
               className='field-input pr-10 appearance-none cursor-pointer bg-[#EBF1FD] border-[#2563EB]/30 text-[#2563EB] font-semibold'
@@ -471,7 +471,7 @@ export default function NewDocumentPage() {
         <Icon size={14} />{meta?.label}
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} onKeyDown={handleKeyDown}>
+      <form onSubmit={handleSubmit(onSubmit)} onKeyDown={handleKeyDown} className='tour-doc-generate'>
         <StepBar step={step} labels={STEPS} />
 
         {/* Step content */}

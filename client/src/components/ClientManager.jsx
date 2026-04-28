@@ -3,6 +3,8 @@ import { Plus, Users, Search, Edit2, Trash2, Building, Mail, MapPin, Phone, Load
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useClients } from '@/hooks/useClients'
+import { useAuth } from '@/hooks/useAuth'
+import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 
 /* ─── Editorial Components ────────────────────────── */
@@ -25,6 +27,8 @@ function EditorialInput({ label, error, ...props }) {
 
 export function ClientManager({ compact = false }) {
   const { clients, loading, addClient, editClient, removeClient } = useClients()
+  const { user } = useAuth()
+  const navigate = useNavigate()
   const [selectedClient, setSelectedClient] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   
@@ -63,6 +67,12 @@ export function ClientManager({ compact = false }) {
         if (selectedClient?.id === updated.id) setSelectedClient(updated)
       } else {
         await addClient(formData)
+        const tourActive = localStorage.getItem(`docflow_tour_phase_${user?.id}`)
+        if (tourActive === 'clients_waiting') {
+           localStorage.setItem(`docflow_tour_phase_${user?.id}`, 'documents')
+           window.dispatchEvent(new Event('docflow_tour_update'))
+           navigate('/new/cuenta-cobro')
+        }
       }
       setIsModalOpen(false)
     } catch (error) {
@@ -87,7 +97,7 @@ export function ClientManager({ compact = false }) {
           </h2>
           <button 
             onClick={openNewClient}
-            className="btn-primary h-10 px-5 text-sm"
+            className="btn-primary h-10 px-5 text-sm tour-clients-new"
           >
             <Plus size={18} />
             Nuevo Cliente

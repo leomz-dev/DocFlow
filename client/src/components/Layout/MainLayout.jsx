@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
+import { AppTour } from './AppTour'
 
 /* ─── config ────────────────────────────────────────── */
 const NAV_ITEMS = [
@@ -85,7 +86,7 @@ function Sidebar({ open, onClose, user, company, navigate, logout }) {
         </div>
 
         {/* Create new */}
-        <div className='px-3 pt-4 pb-2'>
+        <div className='px-3 pt-4 pb-2 tour-step-create'>
           <p className='section-label text-white/30 px-2 mb-2'>Crear</p>
           {DOC_TYPES.map(doc => (
             <button
@@ -116,7 +117,7 @@ function Sidebar({ open, onClose, user, company, navigate, logout }) {
         <div className='mx-3 h-px bg-white/[0.07]' />
 
         {/* Nav */}
-        <nav className='flex-1 px-3 py-3 space-y-0.5 overflow-y-auto'>
+        <nav className='flex-1 px-3 py-3 space-y-0.5 overflow-y-auto tour-step-nav'>
           <p className='section-label text-white/30 px-2 mb-2'>Navegación</p>
           {NAV_ITEMS.map(item => {
             const isActive = location.pathname === item.to ||
@@ -149,7 +150,7 @@ function Sidebar({ open, onClose, user, company, navigate, logout }) {
         </nav>
 
         {/* User + logout */}
-        <div className='px-3 pb-4 border-t border-white/[0.07] pt-3 space-y-1'>
+        <div className='px-3 pb-4 border-t border-white/[0.07] pt-3 space-y-1 tour-step-settings'>
           <button
             onClick={() => { navigate('/settings'); onClose() }}
             className='w-full flex items-center gap-2.5 px-3 py-2 rounded-[12px] hover:bg-white/[0.07] transition-colors text-left'
@@ -284,6 +285,7 @@ export function MainLayout() {
 
   return (
     <div className='flex h-[100dvh] overflow-hidden bg-[#F4F6FA]'>
+      <AppTour />
       {/* Sidebar */}
       <Sidebar
         open={sidebarOpen}

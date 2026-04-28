@@ -216,7 +216,7 @@ export default function SettingsPage() {
 
       {/* ── Logo & Sign ── */}
       <Section icon={Image} title='Logo y Firma' description='Aparecen en sus PDFs generados' defaultOpen>
-        <div className='grid grid-cols-2 gap-4'>
+        <div className='grid grid-cols-2 gap-4 tour-settings-logo'>
           <UploadArea
             label='Logo' hint='PNG o JPG'
             onUpload={async f => { setLogoLoading(true); try { updateUserInContext(await usersApi.uploadLogo(f)) } finally { setLogoLoading(false) } }}
@@ -232,7 +232,7 @@ export default function SettingsPage() {
 
       {/* ── Company data ── */}
       <Section icon={Building2} title='Datos de empresa' description='Información que aparece en todos sus documentos' defaultOpen={!!(company?.name)}>
-        <form onSubmit={saveCompany} className='space-y-4'>
+        <form onSubmit={saveCompany} className='space-y-4 tour-settings-data'>
 
           <Divider label='Empresa' />
           <Input id='c-name'    label='Nombre o Razón Social' value={c.name}    onChange={f('name')}    placeholder='Mi Empresa S.A.S.' />
