@@ -111,6 +111,7 @@ export default function LoginPage() {
               <GoogleLogin
                 onSuccess={handleSuccess}
                 onError={() => setError('Error de autenticación. Intente de nuevo.')}
+                use_fedcm_for_prompt={true}
                 theme='outline'
                 shape='rectangular'
                 width={360}
