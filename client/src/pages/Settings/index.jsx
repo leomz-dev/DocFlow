@@ -43,15 +43,11 @@ function StatusBanner({ type, message }) {
 
 /* ─── Upload area ────────────────────────────────── */
 function UploadArea({ label, hint, onUpload, isAttached, loading }) {
-  const ref = useRef(null)
   return (
     <div>
       <p className='field-label'>{label}</p>
       {hint && <p className='text-[12px] text-gray-400 mb-2 leading-snug'>{hint}</p>}
-      <button
-        type='button'
-        onClick={() => ref.current?.click()}
-        disabled={loading}
+      <label
         className={cn(
           'w-full flex flex-col items-center justify-center gap-2 h-28 rounded-[12px] border-2 border-dashed transition-all cursor-pointer',
           isAttached ? 'border-emerald-300 bg-emerald-50' : 'border-gray-200 hover:border-[#0F2040] hover:bg-[#F6F8FC]',
@@ -67,11 +63,12 @@ function UploadArea({ label, hint, onUpload, isAttached, loading }) {
         <p className='text-[13px] font-semibold text-gray-400'>
           {loading ? 'Subiendo...' : isAttached ? '✓ Guardado — toque para cambiar' : 'Toque para subir'}
         </p>
-      </button>
-      <input
-        ref={ref} type='file' accept='image/*' className='hidden'
-        onChange={e => { const f = e.target.files?.[0]; if (f) onUpload(f); e.target.value = '' }}
-      />
+        <input
+          type='file' accept='image/*' className='sr-only'
+          disabled={loading}
+          onChange={e => { const f = e.target.files?.[0]; if (f) onUpload(f); e.target.value = '' }}
+        />
+      </label>
     </div>
   )
 }
