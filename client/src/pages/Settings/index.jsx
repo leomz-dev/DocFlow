@@ -122,6 +122,7 @@ export default function SettingsPage() {
   const [infoLoading,   setInfoLoading]   = useState(false)
   const [logoLoading,   setLogoLoading]   = useState(false)
   const [signLoading,   setSignLoading]   = useState(false)
+  const [assetsStatus,  setAssetsStatus]  = useState({ type: null, msg: '' })
   const [compStatus,    setCompStatus]    = useState({ type: null, msg: '' })
   const [compLoading,   setCompLoading]   = useState(false)
 
@@ -146,6 +147,43 @@ export default function SettingsPage() {
   const initials = (user?.name || user?.email || 'U')
     .split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
   const f = key => e => setC(prev => ({ ...prev, [key]: e.target.value }))
+  const MAX_IMAGE_BYTES = 5 * 1024 * 1024
+
+  const validateImage = (file) => {
+    if (!file?.type?.startsWith('image/')) return 'Solo se permiten imágenes.'
+    if (file.size > MAX_IMAGE_BYTES) return 'La imagen supera 5MB.'
+    return null
+  }
+
+  const uploadAsset = async (kind, file) => {
+    const validationError = validateImage(file)
+    if (validationError) {
+      setAssetsStatus({ type: 'error', msg: validationError })
+      return
+    }
+
+    setAssetsStatus({ type: null, msg: '' })
+    const setLoading = kind === 'logo' ? setLogoLoading : setSignLoading
+
+    try {
+      setLoading(true)
+      const updatedUser = kind === 'logo'
+        ? await usersApi.uploadLogo(file)
+        : await usersApi.uploadSign(file)
+      updateUserInContext(updatedUser)
+      setAssetsStatus({
+        type: 'success',
+        msg: kind === 'logo' ? 'Logo guardado correctamente.' : 'Firma guardada correctamente.'
+      })
+    } catch (err) {
+      setAssetsStatus({
+        type: 'error',
+        msg: err?.response?.data?.error || 'No se pudo subir la imagen. Intente de nuevo.'
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const saveInfo = async (e) => {
     e.preventDefault(); setInfoLoading(true); setInfoStatus({ type: null, msg: '' })
@@ -216,17 +254,20 @@ export default function SettingsPage() {
 
       {/* ── Logo & Sign ── */}
       <Section icon={Image} title='Logo y Firma' description='Aparecen en sus PDFs generados' defaultOpen>
-        <div className='grid grid-cols-2 gap-4 tour-settings-logo'>
+        <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 tour-settings-logo'>
           <UploadArea
             label='Logo' hint='PNG o JPG'
-            onUpload={async f => { setLogoLoading(true); try { updateUserInContext(await usersApi.uploadLogo(f)) } finally { setLogoLoading(false) } }}
+            onUpload={f => uploadAsset('logo', f)}
             isAttached={!!company?.logoPath} loading={logoLoading}
           />
           <UploadArea
             label='Firma' hint='PNG fondo transparente'
-            onUpload={async f => { setSignLoading(true); try { updateUserInContext(await usersApi.uploadSign(f)) } finally { setSignLoading(false) } }}
+            onUpload={f => uploadAsset('sign', f)}
             isAttached={!!company?.signPath} loading={signLoading}
           />
+        </div>
+        <div className='mt-3'>
+          <StatusBanner type={assetsStatus.type} message={assetsStatus.msg} />
         </div>
       </Section>
 
@@ -236,29 +277,29 @@ export default function SettingsPage() {
 
           <Divider label='Empresa' />
           <Input id='c-name'    label='Nombre o Razón Social' value={c.name}    onChange={f('name')}    placeholder='Mi Empresa S.A.S.' />
-          <div className='grid grid-cols-2 gap-4'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
             <Input id='c-nit'   label='NIT / RUT'            value={c.nit}     onChange={f('nit')}     placeholder='900.123.456-7' />
             <Input id='c-phone' label='Teléfono'             value={c.phone}   onChange={f('phone')}   placeholder='+57 300...' type='tel' />
           </div>
           <Input id='c-email'   label='Correo de contacto'   value={c.email}   onChange={f('email')}   placeholder='contacto@empresa.com' type='email' />
-          <div className='grid grid-cols-2 gap-4'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
             <Input id='c-city'  label='Ciudad'               value={c.city}    onChange={f('city')}    placeholder='Bogotá' />
             <Input id='c-dept'  label='Departamento'         value={c.department} onChange={f('department')} placeholder='Cundinamarca' />
           </div>
           <Input id='c-addr'    label='Dirección'            value={c.address} onChange={f('address')} placeholder='Calle 123 # 45-67' />
 
           <Divider label='Representante Legal' />
-          <div className='grid grid-cols-2 gap-4'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
             <Input id='c-legal'   label='Nombre'   value={c.legalRep}   onChange={f('legalRep')}   placeholder='Nombre Completo' />
             <Input id='c-legid'   label='Cédula'   value={c.legalRepId} onChange={f('legalRepId')} placeholder='1.000.000.000' />
           </div>
 
           <Divider label='Datos Bancarios' />
-          <div className='grid grid-cols-2 gap-4'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
             <Input id='c-bank'  label='Banco'          value={c.bankName}        onChange={f('bankName')}        placeholder='Bancolombia' />
             <Input id='c-btype' label='Tipo de cuenta' value={c.bankAccountType} onChange={f('bankAccountType')} placeholder='Ahorros' />
           </div>
-          <div className='grid grid-cols-2 gap-4'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
             <Input id='c-bnum'  label='Número'  value={c.bankAccountNum} onChange={f('bankAccountNum')} placeholder='000-000000-00' />
             <Input id='c-bhol'  label='Titular' value={c.bankHolder}     onChange={f('bankHolder')}     placeholder='Razón Social' />
           </div>

@@ -91,13 +91,13 @@ export function ClientManager({ compact = false }) {
   return (
     <div className="space-y-6">
       {!compact && (
-        <div className="flex items-center justify-between border-b border-gray-100 pb-5 mb-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-gray-100 pb-5 mb-6 gap-4">
           <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
             <Users size={22} className="text-blue-600" /> Directorio de Clientes
           </h2>
           <button 
             onClick={openNewClient}
-            className="btn-primary h-10 px-5 text-sm tour-clients-new"
+            className="btn-primary h-10 px-5 text-sm w-full sm:w-auto tour-clients-new justify-center"
           >
             <Plus size={18} />
             Nuevo Cliente
@@ -165,40 +165,40 @@ export function ClientManager({ compact = false }) {
         {/* Detalles del cliente */}
         <div className="lg:col-span-8">
           {selectedClient ? (
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 relative border border-gray-100 dark:border-slate-800 animate-fade-in h-full shadow-sm">
-              <div className="absolute top-6 right-6 flex gap-2">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 sm:p-8 relative border border-gray-100 dark:border-slate-800 animate-fade-in h-full shadow-sm">
+              <div className="absolute top-5 right-5 sm:top-6 sm:right-6 flex gap-2">
                 <button 
                   onClick={() => openEditClient(selectedClient)}
-                  className="p-2.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all shadow-sm"
+                  className="p-2 sm:p-2.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all shadow-sm"
                   title="Editar Información"
                 >
-                  <Edit2 size={20} />
+                  <Edit2 size={18} className="sm:w-5 sm:h-5" />
                 </button>
                 <button 
                   onClick={() => handleDelete(selectedClient.id)}
-                  className="p-2.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all shadow-sm"
+                  className="p-2 sm:p-2.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all shadow-sm"
                   title="Eliminar Cliente"
                 >
-                  <Trash2 size={20} />
+                  <Trash2 size={18} className="sm:w-5 sm:h-5" />
                 </button>
               </div>
 
-              <div className="flex items-center gap-6 mb-10">
-                <div className="h-20 w-20 rounded-2xl bg-[var(--navy)] text-white flex items-center justify-center font-bold text-3xl uppercase shadow-lg">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 mb-8 sm:mb-10">
+                <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-[var(--navy)] text-white flex items-center justify-center font-bold text-2xl sm:text-3xl uppercase shadow-lg">
                   {selectedClient.name.substring(0, 2)}
                 </div>
-                <div>
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">{selectedClient.name}</h3>
-                  <div className="flex items-center gap-3 mt-2">
-                    <span className="text-[10px] font-bold bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full uppercase tracking-widest">
+                <div className="pr-20 sm:pr-0">
+                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white tracking-tight break-words">{selectedClient.name}</h3>
+                  <div className="flex flex-wrap items-center gap-3 mt-2">
+                    <span className="text-[10px] font-bold bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full uppercase tracking-widest break-all">
                       {selectedClient.nit || 'NIT NO DISPONIBLE'}
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="bg-slate-50 dark:bg-slate-800/40 p-5 rounded-2xl border border-gray-100 dark:border-slate-800 overflow-hidden">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
+                <div className="bg-slate-50 dark:bg-slate-800/40 p-4 sm:p-5 rounded-2xl border border-gray-100 dark:border-slate-800 overflow-hidden">
                   <p className="section-label mb-2 flex items-center gap-2">
                     <Mail size={14} className="text-blue-600" /> Correo Electrónico
                   </p>
@@ -206,7 +206,7 @@ export function ClientManager({ compact = false }) {
                     {selectedClient.email || 'No registrado'}
                   </p>
                 </div>
-                <div className="bg-slate-50 dark:bg-slate-800/40 p-5 rounded-2xl border border-gray-100 dark:border-slate-800 overflow-hidden">
+                <div className="bg-slate-50 dark:bg-slate-800/40 p-4 sm:p-5 rounded-2xl border border-gray-100 dark:border-slate-800 overflow-hidden">
                   <p className="section-label mb-2 flex items-center gap-2">
                     <Phone size={14} className="text-blue-600" /> Teléfono
                   </p>
@@ -214,7 +214,7 @@ export function ClientManager({ compact = false }) {
                     {selectedClient.phone || 'No registrado'}
                   </p>
                 </div>
-                <div className="bg-slate-50 dark:bg-slate-800/40 p-5 rounded-2xl border border-gray-100 dark:border-slate-800 overflow-hidden">
+                <div className="bg-slate-50 dark:bg-slate-800/40 p-4 sm:p-5 rounded-2xl border border-gray-100 dark:border-slate-800 overflow-hidden">
                   <p className="section-label mb-2 flex items-center gap-2">
                     <MapPin size={14} className="text-blue-600" /> Ubicación
                   </p>
@@ -222,7 +222,7 @@ export function ClientManager({ compact = false }) {
                     {selectedClient.city || '—'}
                   </p>
                 </div>
-                <div className="bg-slate-50 dark:bg-slate-800/40 p-5 rounded-2xl border border-gray-100 dark:border-slate-800 overflow-hidden">
+                <div className="bg-slate-50 dark:bg-slate-800/40 p-4 sm:p-5 rounded-2xl border border-gray-100 dark:border-slate-800 overflow-hidden">
                   <p className="section-label mb-2 flex items-center gap-2">
                     <Building size={14} className="text-blue-600" /> Dirección Fiscal
                   </p>
@@ -244,9 +244,9 @@ export function ClientManager({ compact = false }) {
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="sm:max-w-[550px] p-0 overflow-hidden bg-white dark:bg-slate-900 border-none shadow-lg rounded-2xl">
-          <div className="bg-slate-50 dark:bg-slate-800/50 p-8 border-b border-gray-100 dark:border-slate-700">
+          <div className="bg-slate-50 dark:bg-slate-800/50 p-6 sm:p-8 border-b border-gray-100 dark:border-slate-700">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+              <DialogTitle className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
                 {isEditing ? 'Editar Perfil' : 'Nuevo Cliente'}
               </DialogTitle>
               <p className="text-sm text-gray-500 mt-1.5">
@@ -255,8 +255,8 @@ export function ClientManager({ compact = false }) {
             </DialogHeader>
           </div>
 
-          <div className="p-8">
-            <form id="client-form" onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="p-6 sm:p-8 max-h-[80vh] overflow-y-auto">
+            <form id="client-form" onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
               <div className="md:col-span-2">
                 <EditorialInput 
                   label="Nombre o Razón Social *" 
@@ -304,10 +304,10 @@ export function ClientManager({ compact = false }) {
               />
             </form>
 
-            <div className="flex justify-end items-center gap-3 mt-10 pt-6 border-t border-gray-100 dark:border-slate-800">
+            <div className="flex flex-col-reverse sm:flex-row justify-end items-stretch sm:items-center gap-3 mt-8 sm:mt-10 pt-6 border-t border-gray-100 dark:border-slate-800">
               <button 
                 type="button" 
-                className="btn-ghost"
+                className="btn-ghost py-2.5 sm:py-2"
                 onClick={() => setIsModalOpen(false)}
               >
                 Cancelar
@@ -316,7 +316,7 @@ export function ClientManager({ compact = false }) {
                 type="submit" 
                 form="client-form" 
                 disabled={submitLoading}
-                className="btn-primary min-h-[44px] px-8"
+                className="btn-primary min-h-[44px] px-8 w-full sm:w-auto flex justify-center items-center"
               >
                 {submitLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : (isEditing ? 'Actualizar' : 'Crear Cliente')}
               </button>

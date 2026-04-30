@@ -1,5 +1,27 @@
 const userRepo = require('../repositories/user.repository');
 const storage  = require('../storage/local.storage');
+const sharp = require('sharp');
+
+const ALLOWED_IMAGE_MIMES = new Set([
+  'image/png',
+  'image/jpeg',
+  'image/jpg',
+  'image/webp',
+  'image/heic',
+  'image/heif',
+]);
+
+async function normalizeImageToPng(buffer, mimetype) {
+  if (!ALLOWED_IMAGE_MIMES.has(String(mimetype || '').toLowerCase())) {
+    throw Object.assign(new Error('Formato de imagen no soportado. Use PNG, JPG, WEBP o HEIC.'), { status: 400 });
+  }
+
+  try {
+    return await sharp(buffer).rotate().png().toBuffer();
+  } catch {
+    throw Object.assign(new Error('No se pudo procesar la imagen. Intente con otro archivo.'), { status: 400 });
+  }
+}
 
 /**
  * Returns the user profile (without password).
@@ -54,13 +76,14 @@ async function updateCompany(userId, body) {
  * Saves a logo file and updates logoPath.
  */
 async function uploadLogo(userId, buffer, mimetype) {
-  const ext = mimetype.split('/')[1] || 'png';
-  const relativePath = `usuarios/${userId}/logo.${ext}`;
-  await storage.save(relativePath, buffer);
+  const relativePath = `usuarios/${userId}/logo.png`;
+  const pngBuffer = await normalizeImageToPng(buffer, mimetype);
+  await storage.save(relativePath, pngBuffer);
 
   const user = await userRepo.findById(userId);
   if (!user) throw Object.assign(new Error('Usuario no encontrado'), { status: 404 });
 
+  user.company = user.company || {};
   user.company.logoPath = relativePath;
   await userRepo.save(user);
   const { password: _pw, ...safe } = user;
@@ -71,13 +94,14 @@ async function uploadLogo(userId, buffer, mimetype) {
  * Saves a signature file and updates signPath.
  */
 async function uploadSign(userId, buffer, mimetype) {
-  const ext = mimetype.split('/')[1] || 'png';
-  const relativePath = `usuarios/${userId}/firma.${ext}`;
-  await storage.save(relativePath, buffer);
+  const relativePath = `usuarios/${userId}/firma.png`;
+  const pngBuffer = await normalizeImageToPng(buffer, mimetype);
+  await storage.save(relativePath, pngBuffer);
 
   const user = await userRepo.findById(userId);
   if (!user) throw Object.assign(new Error('Usuario no encontrado'), { status: 404 });
 
+  user.company = user.company || {};
   user.company.signPath = relativePath;
   await userRepo.save(user);
   const { password: _pw, ...safe } = user;

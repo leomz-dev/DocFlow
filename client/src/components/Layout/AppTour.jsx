@@ -181,14 +181,26 @@ export function AppTour() {
           textColor: '#334155',
           backgroundColor: '#ffffff',
           arrowColor: '#ffffff',
+          width: 400 // It might be overridden by tooltip width
+        },
+        tooltip: {
+          width: 'calc(100vw - 32px)',
+          maxWidth: '400px',
         },
         buttonClose: { display: 'none' },
-        buttonSkip:  { color: '#64748b' },
-        buttonNext:  { backgroundColor: '#2563EB', borderRadius: '8px', padding: '8px 16px' },
-        buttonBack:  { marginRight: 10 },
+        buttonSkip:  { color: '#64748b', fontSize: '14px' },
+        buttonNext:  { backgroundColor: '#2563EB', borderRadius: '8px', padding: '8px 16px', fontSize: '14px' },
+        buttonBack:  { marginRight: 10, fontSize: '14px' },
         tooltipContainer: { textAlign: 'left' },
-        tooltipTitle:     { fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' },
-        tooltipContent:   { fontSize: '14px', lineHeight: '1.5' }
+        tooltipTitle:     { fontSize: '16px', fontWeight: 'bold', marginBottom: '8px' },
+        tooltipContent:   { fontSize: '14px', lineHeight: '1.5', paddingBottom: '16px' }
+      }}
+      floaterProps={{
+        styles: {
+          floater: {
+            maxWidth: '100vw',
+          }
+        }
       }}
     />
   )
