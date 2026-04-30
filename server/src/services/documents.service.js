@@ -2,6 +2,18 @@ const userRepo     = require('../repositories/user.repository');
 const documentRepo = require('../repositories/document.repository');
 const { DOC_PREFIXES, DOC_COUNTER_KEYS } = require('../../config/constants');
 
+function validateCompanyForDocument(company) {
+  const missing = [];
+
+  if (!company?.name?.trim()) missing.push('Nombre de la empresa');
+  if (!company?.nit?.trim()) missing.push('NIT');
+
+  if (missing.length > 0) {
+    const msg = `Antes de generar documentos, complete en Configuracion: ${missing.join(', ')}.`;
+    throw Object.assign(new Error(msg), { status: 422 });
+  }
+}
+
 /**
  * Builds the complete document data object by merging:
  * - Company data from DB
@@ -17,6 +29,7 @@ async function buildDocumentData(userId, body) {
 
   const user = await userRepo.findById(userId);
   if (!user) throw Object.assign(new Error('Usuario no encontrado'), { status: 404 });
+  validateCompanyForDocument(user.company);
 
   const counterKey = DOC_COUNTER_KEYS[type];
   if (!counterKey) throw Object.assign(new Error(`Tipo de documento inválido: ${type}`), { status: 400 });

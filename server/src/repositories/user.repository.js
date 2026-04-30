@@ -1,5 +1,32 @@
 const prisma = require('../config/prisma');
 
+function buildCompanyCreateData(company, userBaseData = {}) {
+  const source = company || {};
+  return {
+    name: source.name ?? userBaseData.name ?? 'Mi empresa',
+    nit: source.nit ?? '',
+    address: source.address ?? '',
+    phone: source.phone ?? '',
+    email: source.email ?? userBaseData.email ?? '',
+    city: source.city ?? null,
+    department: source.department ?? null,
+    country: source.country ?? null,
+    website: source.website ?? null,
+    tagline: source.tagline ?? null,
+    legalRep: source.legalRep ?? null,
+    legalRepId: source.legalRepId ?? null,
+    logoPath: source.logoPath ?? null,
+    signPath: source.signPath ?? null,
+    bankName: source.bankName ?? null,
+    bankAccountType: source.bankAccountType ?? null,
+    bankAccountNum: source.bankAccountNum ?? null,
+    bankHolder: source.bankHolder ?? null,
+    ivaRate: source.ivaRate ?? 19,
+    retencionRate: source.retencionRate ?? 3.5,
+    regimenTributario: source.regimenTributario ?? null,
+  };
+}
+
 /** Busca un usuario por ID */
 async function findById(id) {
   return await prisma.user.findUnique({
@@ -44,6 +71,7 @@ async function save(userData) {
   // Prisma no permite pasar la clave foránea (userId) manualmente en una escritura anidada
   const cleanComp = company ? { ...company } : undefined;
   if (cleanComp) delete cleanComp.userId;
+  const compCreate = cleanComp ? buildCompanyCreateData(cleanComp, baseData) : undefined;
 
   const cleanTemp = templates ? { ...templates } : undefined;
   if (cleanTemp) delete cleanTemp.userId;
@@ -55,14 +83,14 @@ async function save(userData) {
     where: { id: id || '' },
     update: {
       ...baseData,
-      company: cleanComp ? { upsert: { create: cleanComp, update: cleanComp } } : undefined,
+      company: cleanComp ? { upsert: { create: compCreate, update: cleanComp } } : undefined,
       templates: cleanTemp ? { upsert: { create: cleanTemp, update: cleanTemp } } : undefined,
       counters: cleanCount ? { upsert: { create: cleanCount, update: cleanCount } } : undefined,
     },
     create: {
       ...baseData,
       id: id,
-      company: cleanComp ? { create: cleanComp } : undefined,
+      company: cleanComp ? { create: compCreate } : undefined,
       templates: cleanTemp ? { create: cleanTemp } : undefined,
       counters: cleanCount ? { create: cleanCount } : { create: {} },
     },
