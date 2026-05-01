@@ -57,6 +57,12 @@ async function updateCompany(userId, body) {
     const clean = Object.fromEntries(
       Object.entries(body.company).filter(([k]) => !FORBIDDEN.includes(k))
     );
+
+    // Validate & sanitize paymentMethods (max 3)
+    if (clean.paymentMethods !== undefined) {
+      clean.paymentMethods = sanitizePaymentMethods(clean.paymentMethods);
+    }
+
     user.company = { ...user.company, ...clean };
   } else {
     const clean = Object.fromEntries(
@@ -70,6 +76,31 @@ async function updateCompany(userId, body) {
   await userRepo.save(user);
   const { password: _pw, ...safe } = user;
   return safe;
+}
+
+/**
+ * Validates and sanitizes the paymentMethods array.
+ * - Must be an array, max 3 elements.
+ * - Each element keeps only { bankName, bankAccountType, bankAccountNum, bankHolder }.
+ * - Removes entries where all 4 fields are empty.
+ */
+function sanitizePaymentMethods(methods) {
+  if (!Array.isArray(methods)) return [];
+
+  const ALLOWED_KEYS = ['bankName', 'bankAccountType', 'bankAccountNum', 'bankHolder'];
+
+  const cleaned = methods
+    .slice(0, 3) // enforce max 3
+    .map(m => {
+      const entry = {};
+      for (const key of ALLOWED_KEYS) {
+        entry[key] = typeof m[key] === 'string' ? m[key].trim() : '';
+      }
+      return entry;
+    })
+    .filter(m => ALLOWED_KEYS.some(k => m[k].length > 0)); // remove fully empty
+
+  return cleaned;
 }
 
 /**

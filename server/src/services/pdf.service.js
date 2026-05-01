@@ -82,6 +82,22 @@ async function getBase64Image(relativePath) {
 async function generate(docType, data) {
   if (data.company) {
     data.company = { ...data.company };
+
+    // ── Migrate legacy single-bank fields to paymentMethods array ──
+    if (!data.company.paymentMethods || !Array.isArray(data.company.paymentMethods) || data.company.paymentMethods.length === 0) {
+      if (data.company.bankName) {
+        data.company.paymentMethods = [{
+          bankName: data.company.bankName || '',
+          bankAccountType: data.company.bankAccountType || '',
+          bankAccountNum: data.company.bankAccountNum || '',
+          bankHolder: data.company.bankHolder || '',
+        }];
+      } else {
+        data.company.paymentMethods = [];
+      }
+    }
+    data.company.hasPaymentMethods = data.company.paymentMethods.length > 0;
+
     // Cargar imágenes en paralelo
     const [logoB64, signB64] = await Promise.all([
       data.company.logoPath ? getBase64Image(data.company.logoPath) : null,

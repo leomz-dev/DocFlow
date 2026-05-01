@@ -114,6 +114,46 @@ function Divider({ label }) {
 }
 
 /* ─── Settings page ──────────────────────────────── */
+const MAX_PAYMENT_METHODS = 3
+const EMPTY_PAYMENT_METHOD = { bankName: '', bankAccountType: '', bankAccountNum: '', bankHolder: '' }
+
+function PaymentMethodCard({ index, data, onChange, onRemove, total }) {
+  const f = key => e => onChange(index, { ...data, [key]: e.target.value })
+  return (
+    <div className='rounded-[12px] border border-gray-200 bg-[#FAFBFD] overflow-hidden transition-all'>
+      <div className='flex items-center justify-between px-4 py-3 bg-white border-b border-gray-100'>
+        <div className='flex items-center gap-2.5'>
+          <div className='w-7 h-7 rounded-[8px] bg-[#E8EEF8] flex items-center justify-center text-[#0F2040] text-[12px] font-bold'>
+            {index + 1}
+          </div>
+          <span className='text-[13px] font-bold text-gray-700'>
+            {data.bankName?.trim() || `Método de pago ${index + 1}`}
+          </span>
+        </div>
+        {total > 1 && (
+          <button
+            type='button'
+            onClick={() => onRemove(index)}
+            className='text-[12px] font-semibold text-red-500 hover:text-red-700 hover:bg-red-50 px-2.5 py-1 rounded-[8px] transition-colors'
+          >
+            Eliminar
+          </button>
+        )}
+      </div>
+      <div className='p-4 space-y-3'>
+        <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+          <Input id={`pm-bank-${index}`}  label='Banco'          value={data.bankName}        onChange={f('bankName')}        placeholder='Bancolombia' />
+          <Input id={`pm-type-${index}`}  label='Tipo de cuenta' value={data.bankAccountType} onChange={f('bankAccountType')} placeholder='Ahorros' />
+        </div>
+        <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+          <Input id={`pm-num-${index}`}   label='Número'         value={data.bankAccountNum}  onChange={f('bankAccountNum')}  placeholder='000-000000-00' />
+          <Input id={`pm-hold-${index}`}  label='Titular'        value={data.bankHolder}       onChange={f('bankHolder')}       placeholder='Razón Social' />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function SettingsPage() {
   const { user, company, updateUserInContext } = useAuth()
 
@@ -125,6 +165,23 @@ export default function SettingsPage() {
   const [assetsStatus,  setAssetsStatus]  = useState({ type: null, msg: '' })
   const [compStatus,    setCompStatus]    = useState({ type: null, msg: '' })
   const [compLoading,   setCompLoading]   = useState(false)
+
+  // ── Migrate legacy single-bank fields to paymentMethods array ──
+  const buildInitialPaymentMethods = () => {
+    if (Array.isArray(company?.paymentMethods) && company.paymentMethods.length > 0) {
+      return company.paymentMethods
+    }
+    // Legacy migration: if old fields exist, create one entry
+    if (company?.bankName) {
+      return [{
+        bankName: company.bankName || '',
+        bankAccountType: company.bankAccountType || '',
+        bankAccountNum: company.bankAccountNum || '',
+        bankHolder: company.bankHolder || '',
+      }]
+    }
+    return []
+  }
 
   const [c, setC] = useState({
     name:            company?.name            ?? '',
@@ -138,10 +195,7 @@ export default function SettingsPage() {
     website:         company?.website         ?? '',
     legalRep:        company?.legalRep        ?? '',
     legalRepId:      company?.legalRepId      ?? '',
-    bankName:        company?.bankName        ?? '',
-    bankAccountType: company?.bankAccountType ?? '',
-    bankAccountNum:  company?.bankAccountNum  ?? '',
-    bankHolder:      company?.bankHolder      ?? '',
+    paymentMethods:  buildInitialPaymentMethods(),
   })
 
   const initials = (user?.name || user?.email || 'U')
@@ -153,6 +207,24 @@ export default function SettingsPage() {
     if (!file?.type?.startsWith('image/')) return 'Solo se permiten imágenes.'
     if (file.size > MAX_IMAGE_BYTES) return 'La imagen supera 5MB.'
     return null
+  }
+
+  // ── Payment methods handlers ──
+  const addPaymentMethod = () => {
+    if (c.paymentMethods.length >= MAX_PAYMENT_METHODS) return
+    setC(prev => ({ ...prev, paymentMethods: [...prev.paymentMethods, { ...EMPTY_PAYMENT_METHOD }] }))
+  }
+  const updatePaymentMethod = (idx, data) => {
+    setC(prev => ({
+      ...prev,
+      paymentMethods: prev.paymentMethods.map((m, i) => i === idx ? data : m)
+    }))
+  }
+  const removePaymentMethod = (idx) => {
+    setC(prev => ({
+      ...prev,
+      paymentMethods: prev.paymentMethods.filter((_, i) => i !== idx)
+    }))
   }
 
   const uploadAsset = async (kind, file) => {
@@ -294,15 +366,34 @@ export default function SettingsPage() {
             <Input id='c-legid'   label='Cédula'   value={c.legalRepId} onChange={f('legalRepId')} placeholder='1.000.000.000' />
           </div>
 
-          <Divider label='Datos Bancarios' />
-          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-            <Input id='c-bank'  label='Banco'          value={c.bankName}        onChange={f('bankName')}        placeholder='Bancolombia' />
-            <Input id='c-btype' label='Tipo de cuenta' value={c.bankAccountType} onChange={f('bankAccountType')} placeholder='Ahorros' />
+          <Divider label='Métodos de Pago' />
+          <p className='text-[12px] text-gray-400 -mt-2 leading-snug'>
+            Agregue hasta {MAX_PAYMENT_METHODS} cuentas bancarias. Aparecerán en todos sus documentos.
+          </p>
+
+          <div className='space-y-3'>
+            {c.paymentMethods.map((pm, i) => (
+              <PaymentMethodCard
+                key={i}
+                index={i}
+                data={pm}
+                onChange={updatePaymentMethod}
+                onRemove={removePaymentMethod}
+                total={c.paymentMethods.length}
+              />
+            ))}
           </div>
-          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-            <Input id='c-bnum'  label='Número'  value={c.bankAccountNum} onChange={f('bankAccountNum')} placeholder='000-000000-00' />
-            <Input id='c-bhol'  label='Titular' value={c.bankHolder}     onChange={f('bankHolder')}     placeholder='Razón Social' />
-          </div>
+
+          {c.paymentMethods.length < MAX_PAYMENT_METHODS && (
+            <button
+              type='button'
+              onClick={addPaymentMethod}
+              className='w-full flex items-center justify-center gap-2 py-3 rounded-[12px] border-2 border-dashed border-gray-200 text-[13px] font-semibold text-gray-400 hover:border-[#0F2040] hover:text-[#0F2040] hover:bg-[#F6F8FC] transition-all'
+            >
+              <CreditCard size={16} />
+              Añadir método de pago ({c.paymentMethods.length}/{MAX_PAYMENT_METHODS})
+            </button>
+          )}
 
           <StatusBanner type={compStatus.type} message={compStatus.msg} />
           <button type='submit' disabled={compLoading} className='btn btn-primary w-full mt-2'>

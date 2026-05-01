@@ -46,11 +46,8 @@ model Company {
   logoPath          String?
   signPath          String?
 
-  // Bank Info
-  bankName          String?
-  bankAccountType   String?
-  bankAccountNum    String?
-  bankHolder        String?
+  // Payment methods (max 3) — JSON array of { bankName, bankAccountType, bankAccountNum, bankHolder }
+  paymentMethods    Json    @default("[]")
 
   // Tax Config
   ivaRate           Float   @default(19)

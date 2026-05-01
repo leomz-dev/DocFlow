@@ -107,15 +107,17 @@
     </div>
 
     <!-- BANK INFO -->
-    {{#if company.bankName}}
+    {{#if company.hasPaymentMethods}}
     <div class="bank-info">
       <h3>Datos bancarios para pago</h3>
+      {{#each company.paymentMethods}}
       <p>
-        <strong>Banco:</strong> {{company.bankName}} &nbsp;|&nbsp;
-        <strong>Tipo:</strong> {{company.bankAccountType}} &nbsp;|&nbsp;
-        <strong>No. Cuenta:</strong> {{company.bankAccountNum}} &nbsp;|&nbsp;
-        <strong>Titular:</strong> {{company.bankHolder}}
+        <strong>Banco:</strong> {{bankName}} &nbsp;|&nbsp;
+        <strong>Tipo:</strong> {{bankAccountType}} &nbsp;|&nbsp;
+        <strong>No. Cuenta:</strong> {{bankAccountNum}} &nbsp;|&nbsp;
+        <strong>Titular:</strong> {{bankHolder}}
       </p>
+      {{/each}}
     </div>
     {{/if}}
 
