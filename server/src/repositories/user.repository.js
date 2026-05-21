@@ -52,8 +52,6 @@ const legacyCompanySelect = {
   retencionRate: true,
   regimenTributario: true,
   userId: true,
-  createdAt: true,
-  updatedAt: true,
 };
 
 const legacyUserInclude = {
