@@ -9,9 +9,8 @@ function errorMiddleware(err, req, res, next) {
   const status  = err.status || 500;
   const message = err.message || 'Error interno del servidor';
 
-  if (IS_DEV) {
-    console.error(`[ERROR] ${req.method} ${req.path}:`, err);
-  }
+  // Always log errors in production and development to allow troubleshooting!
+  console.error(`[ERROR] ${req.method} ${req.path}:`, err);
 
   res.status(status).json({
     error: message,

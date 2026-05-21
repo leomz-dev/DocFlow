@@ -24,32 +24,103 @@ function buildCompanyCreateData(company, userBaseData = {}) {
   };
 }
 
+const userInclude = {
+  company: true,
+  counters: true,
+  templates: true,
+  documents: true,
+  clients: true,
+};
+
+const legacyCompanySelect = {
+  id: true,
+  name: true,
+  nit: true,
+  address: true,
+  phone: true,
+  email: true,
+  city: true,
+  department: true,
+  country: true,
+  website: true,
+  tagline: true,
+  legalRep: true,
+  legalRepId: true,
+  logoPath: true,
+  signPath: true,
+  ivaRate: true,
+  retencionRate: true,
+  regimenTributario: true,
+  userId: true,
+  createdAt: true,
+  updatedAt: true,
+};
+
+const legacyUserInclude = {
+  company: { select: legacyCompanySelect },
+  counters: true,
+  templates: true,
+  documents: true,
+  clients: true,
+};
+
+function isMissingPaymentMethodsColumnError(err) {
+  const message = err?.message || '';
+  return (
+    err?.code === 'P2022' &&
+    message.includes('Company.paymentMethods')
+  );
+}
+
+function normalizeLegacyCompany(user) {
+  if (!user?.company) return user;
+  return {
+    ...user,
+    company: {
+      ...user.company,
+      paymentMethods: Array.isArray(user.company.paymentMethods) ? user.company.paymentMethods : [],
+    },
+  };
+}
+
+function omitPaymentMethods(company) {
+  if (!company) return company;
+  const { paymentMethods, ...rest } = company;
+  return rest;
+}
+
 /** Busca un usuario por ID */
 async function findById(id) {
-  return await prisma.user.findUnique({
-    where: { id },
-    include: {
-      company: true,
-      counters: true,
-      templates: true,
-      documents: true,
-      clients: true,
-    },
-  }) || null;
+  try {
+    return await prisma.user.findUnique({
+      where: { id },
+      include: userInclude,
+    }) || null;
+  } catch (err) {
+    if (!isMissingPaymentMethodsColumnError(err)) throw err;
+    const user = await prisma.user.findUnique({
+      where: { id },
+      include: legacyUserInclude,
+    });
+    return normalizeLegacyCompany(user) || null;
+  }
 }
 
 /** Busca un usuario por email (case-insensitive) */
 async function findByEmail(email) {
-  return await prisma.user.findUnique({
-    where: { email: email.toLowerCase() },
-    include: {
-      company: true,
-      counters: true,
-      templates: true,
-      documents: true,
-      clients: true,
-    },
-  }) || null;
+  try {
+    return await prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+      include: userInclude,
+    }) || null;
+  } catch (err) {
+    if (!isMissingPaymentMethodsColumnError(err)) throw err;
+    const user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+      include: legacyUserInclude,
+    });
+    return normalizeLegacyCompany(user) || null;
+  }
 }
 
 /**
@@ -76,29 +147,50 @@ async function save(userData) {
   const cleanCount = counters ? { ...counters } : undefined;
   if (cleanCount) delete cleanCount.userId;
 
-  return await prisma.user.upsert({
-    where: { id: id || '' },
-    update: {
-      ...baseData,
-      company: cleanComp ? { upsert: { create: compCreate, update: cleanComp } } : undefined,
-      templates: cleanTemp ? { upsert: { create: cleanTemp, update: cleanTemp } } : undefined,
-      counters: cleanCount ? { upsert: { create: cleanCount, update: cleanCount } } : undefined,
-    },
-    create: {
-      ...baseData,
-      id: id,
-      company: cleanComp ? { create: compCreate } : undefined,
-      templates: cleanTemp ? { create: cleanTemp } : undefined,
-      counters: cleanCount ? { create: cleanCount } : { create: {} },
-    },
-    include: {
-      company: true,
-      counters: true,
-      templates: true,
-      documents: true,
-      clients: true,
-    },
-  });
+  try {
+    return await prisma.user.upsert({
+      where: { id: id || '' },
+      update: {
+        ...baseData,
+        company: cleanComp ? { upsert: { create: compCreate, update: cleanComp } } : undefined,
+        templates: cleanTemp ? { upsert: { create: cleanTemp, update: cleanTemp } } : undefined,
+        counters: cleanCount ? { upsert: { create: cleanCount, update: cleanCount } } : undefined,
+      },
+      create: {
+        ...baseData,
+        id: id,
+        company: cleanComp ? { create: compCreate } : undefined,
+        templates: cleanTemp ? { create: cleanTemp } : undefined,
+        counters: cleanCount ? { create: cleanCount } : { create: {} },
+      },
+      include: userInclude,
+    });
+  } catch (err) {
+    if (!isMissingPaymentMethodsColumnError(err)) throw err;
+
+    const legacyComp = omitPaymentMethods(cleanComp);
+    const legacyCompCreate = omitPaymentMethods(compCreate);
+
+    const user = await prisma.user.upsert({
+      where: { id: id || '' },
+      update: {
+        ...baseData,
+        company: legacyComp ? { upsert: { create: legacyCompCreate, update: legacyComp } } : undefined,
+        templates: cleanTemp ? { upsert: { create: cleanTemp, update: cleanTemp } } : undefined,
+        counters: cleanCount ? { upsert: { create: cleanCount, update: cleanCount } } : undefined,
+      },
+      create: {
+        ...baseData,
+        id: id,
+        company: legacyComp ? { create: legacyCompCreate } : undefined,
+        templates: cleanTemp ? { create: cleanTemp } : undefined,
+        counters: cleanCount ? { create: cleanCount } : { create: {} },
+      },
+      include: legacyUserInclude,
+    });
+
+    return normalizeLegacyCompany(user);
+  }
 }
 
 /**
